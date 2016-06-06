@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message SearchRequest {
+  string Query = 1;
+  int32 limit = 2;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+message SearchResponse {
+  repeated string Results = 1;
+  int32 NumResults = 2;
+  SearchRequest OriginalRequest = 3;
+}
