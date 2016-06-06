@@ -35,7 +35,7 @@ $ cat simple_types.js
 ```
 ```js
 /* @flow */
-export type simpleCorpus = "UNIVERSAL" | "WEB" | "IMAGES" | "LOCAL" | "NEWS" | "PRODUCTS" | "VIDEO";
+export type Corpus = "UNIVERSAL" | "WEB" | "IMAGES" | "LOCAL" | "NEWS" | "PRODUCTS" | "VIDEO";
 
 export type SearchRequest = {
   Query?: string,

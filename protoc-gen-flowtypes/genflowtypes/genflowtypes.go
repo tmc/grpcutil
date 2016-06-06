@@ -151,8 +151,12 @@ func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (
 	for _, v := range e.Value {
 		options = append(options, fmt.Sprintf(`"%s"`, v.GetName()))
 	}
+	name := e.GetName()
+	if cfg.qualifyTypes {
+		name = e.File.GoPkg.Name + name
+	}
 	return &namedFlowType{
-		Name: e.File.GoPkg.Name + e.GetName(),
+		Name: name,
 		Type: simpleFlowType(strings.Join(options, " | ")),
 	}, nil
 }
