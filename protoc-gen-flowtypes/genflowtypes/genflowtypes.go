@@ -30,7 +30,7 @@ type repeatedFlowType struct {
 	t FlowType
 }
 
-func (r repeatedFlowType) FlowType() string { return "[]" + r.t.FlowType() }
+func (r repeatedFlowType) FlowType() string { return r.t.FlowType() + "[]" }
 
 type namedFlowType struct {
 	Name string
