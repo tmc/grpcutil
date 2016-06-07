@@ -46,9 +46,7 @@ func websocketProxy(w http.ResponseWriter, r *http.Request, h http.Handler) {
 	req, err := httputil.DumpRequest(r, true)
 	fmt.Println(err)
 	fmt.Println(string(req))
-	conn, err := upgrader.Upgrade(w, r, http.Header{
-		"Sec-WebSocket-Protocol": []string{"Bearer"},
-	})
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("error upgrading websocket:", err)
 		return
@@ -64,7 +62,9 @@ func websocketProxy(w http.ResponseWriter, r *http.Request, h http.Handler) {
 		log.Println("error preparing request:", err)
 		return
 	}
-	request.Header.Set("Authorization", strings.Replace(r.Header.Get("Sec-WebSocket-Protocol"), "Bearer, ", "Bearer ", 1))
+	if swsp := r.Header.Get("Sec-WebSocket-Protocol"); swsp != "" {
+		request.Header.Set("Authorization", strings.Replace(swsp, "Bearer, ", "Bearer ", 1))
+	}
 	if m := r.URL.Query().Get(MethodOverrideParam); m != "" {
 		request.Method = m
 	}
@@ -95,20 +95,20 @@ func websocketProxy(w http.ResponseWriter, r *http.Request, h http.Handler) {
 				return
 			default:
 			}
-			log.Println("reading from socket.")
+			log.Println("[read] reading from socket.")
 			_, p, err := conn.ReadMessage()
 			if err != nil {
 				log.Println("error reading websocket message:", err)
 				return
 			}
-			log.Println("read payload:", string(p))
-			log.Println("writing to requestBody:")
+			log.Println("[read] read payload:", string(p))
+			log.Println("[read] writing to requestBody:")
 			n, err := requestBodyW.Write(p)
-			log.Println("wrote to requestBody", n)
+			log.Println("[read] wrote to requestBody", n)
 			requestBodyW.Write([]byte("\n"))
-			log.Println("wrote newline to requestBody")
+			log.Println("[read] wrote newline to requestBody")
 			if err != nil {
-				log.Println("error writing message to upstream http server:", err)
+				log.Println("[read] error writing message to upstream http server:", err)
 				return
 			}
 		}
@@ -117,12 +117,12 @@ func websocketProxy(w http.ResponseWriter, r *http.Request, h http.Handler) {
 	scanner := bufio.NewScanner(responseBodyR)
 	for scanner.Scan() {
 		if len(scanner.Bytes()) == 0 {
-			log.Println("empty scan", scanner.Err())
+			log.Println("[write] empty scan", scanner.Err())
 			continue
 		}
-		log.Println("scanned", scanner.Text())
+		log.Println("[write] scanned", scanner.Text())
 		if err = conn.WriteMessage(websocket.TextMessage, scanner.Bytes()); err != nil {
-			log.Println("error writing websocket message:", err)
+			log.Println("[write] error writing websocket message:", err)
 			return
 		}
 	}
