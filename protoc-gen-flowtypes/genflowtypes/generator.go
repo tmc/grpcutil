@@ -25,11 +25,11 @@ func New(reg *descriptor.Registry) *generator {
 	return &generator{reg: reg}
 }
 
-func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
-		code, err := generateFlowTypes(file, g.reg, qualifyTypes)
+		code, err := generateFlowTypes(file, g.reg, qualifyTypes, embedEnums)
 		if err == errNoTargetService {
 			glog.V(1).Infof("%s: %v", file.GetName(), err)
 			continue

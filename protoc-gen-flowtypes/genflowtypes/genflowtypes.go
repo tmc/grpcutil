@@ -12,6 +12,7 @@ import (
 
 type config struct {
 	alwaysQualifyTypeNames bool
+	embedEnums             bool
 }
 
 type FlowType interface {
@@ -113,8 +114,16 @@ func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (Na
 		if err != nil {
 			return nil, err
 		}
-		name := cfg.enumTypeName(e)
-		fieldType = simpleFlowType(name)
+
+		if cfg.embedEnums {
+			fieldType, err = cfg.enumToFlowType(e, reg)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			name := cfg.enumTypeName(e)
+			fieldType = simpleFlowType(name)
+		}
 	}
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
 		fieldType = repeatedFlowType{fieldType}
@@ -166,13 +175,16 @@ func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (
 	}, nil
 }
 
-func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, qualifyTypes bool) (string, error) {
+func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, qualifyTypes bool, embedEnums bool) (string, error) {
 	result := []FlowType{}
 	f, err := registry.LookupFile(file.GetName())
 	if err != nil {
 		return "", err
 	}
-	cfg := config{alwaysQualifyTypeNames: qualifyTypes}
+	cfg := config{
+		alwaysQualifyTypeNames: qualifyTypes,
+		embedEnums:             embedEnums,
+	}
 	for _, enum := range f.Enums {
 		t, err := cfg.enumToFlowType(enum, registry)
 		if err != nil {
