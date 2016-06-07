@@ -11,7 +11,7 @@ import (
 )
 
 type config struct {
-	qualifyTypes bool
+	alwaysQualifyTypeNames bool
 }
 
 type FlowType interface {
@@ -105,24 +105,16 @@ func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (Na
 		if err != nil {
 			return nil, err
 		}
-		if cfg.qualifyTypes {
-			fieldType = simpleFlowType(f.Message.File.GoPkg.Name + ft.GetName())
-		} else {
-			fieldType = simpleFlowType(ft.GetName())
-		}
+		fieldType = simpleFlowType(cfg.messageTypeName(ft))
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
 		fieldType = simpleFlowType("string") // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
-		f.GetTypeName()
 		e, err := reg.LookupEnum("", f.GetTypeName())
 		if err != nil {
 			return nil, err
 		}
-		if cfg.qualifyTypes {
-			fieldType = simpleFlowType(f.Message.File.GoPkg.Name + e.GetName())
-		} else {
-			fieldType = simpleFlowType(e.GetName())
-		}
+		name := cfg.enumTypeName(e)
+		fieldType = simpleFlowType(name)
 	}
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
 		fieldType = repeatedFlowType{fieldType}
@@ -139,11 +131,27 @@ func (cfg config) messageToFlowType(m *descriptor.Message, reg *descriptor.Regis
 		}
 		t.Fields = append(t.Fields, field)
 	}
-	name := m.GetName()
-	if cfg.qualifyTypes {
-		name = m.File.GoPkg.Name + name
+	return &namedFlowType{Name: cfg.messageTypeName(m), Type: t}, nil
+}
+
+func (cfg config) enumTypeName(e *descriptor.Enum) string {
+	name := strings.Replace(e.FQEN(), ".", "", -1)
+	if !cfg.alwaysQualifyTypeNames {
+		if strings.HasPrefix(name, e.File.GoPkg.Name) {
+			name = name[len(e.File.GoPkg.Name):]
+		}
 	}
-	return &namedFlowType{Name: name, Type: t}, nil
+	return name
+}
+
+func (cfg config) messageTypeName(m *descriptor.Message) string {
+	name := strings.Replace(m.FQMN(), ".", "", -1)
+	if !cfg.alwaysQualifyTypeNames {
+		if strings.HasPrefix(name, m.File.GoPkg.Name) {
+			name = name[len(m.File.GoPkg.Name):]
+		}
+	}
+	return name
 }
 
 func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowType, error) {
@@ -151,10 +159,7 @@ func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (
 	for _, v := range e.Value {
 		options = append(options, fmt.Sprintf(`"%s"`, v.GetName()))
 	}
-	name := e.GetName()
-	if cfg.qualifyTypes {
-		name = e.File.GoPkg.Name + name
-	}
+	name := cfg.enumTypeName(e)
 	return &namedFlowType{
 		Name: name,
 		Type: simpleFlowType(strings.Join(options, " | ")),
@@ -167,7 +172,7 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, qua
 	if err != nil {
 		return "", err
 	}
-	cfg := config{qualifyTypes: qualifyTypes}
+	cfg := config{alwaysQualifyTypeNames: qualifyTypes}
 	for _, enum := range f.Enums {
 		t, err := cfg.enumToFlowType(enum, registry)
 		if err != nil {

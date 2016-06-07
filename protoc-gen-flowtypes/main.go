@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	importPrefix = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
-	qualifyTypes = flag.Bool("qualify_types", false, "prefixes package names to qualify types if true")
-	file         = flag.String("file", "stdin", "where to load data from")
+	importPrefix       = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
+	alwaysQualifyTypes = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
+	file               = flag.String("file", "stdin", "where to load data from")
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
@@ -88,7 +88,7 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, *qualifyTypes)
+	out, err := g.Generate(targets, *alwaysQualifyTypes)
 	glog.V(1).Info("Processed code generator request")
 	if err != nil {
 		emitError(err)
