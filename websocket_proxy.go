@@ -72,22 +72,21 @@ func websocketProxy(w http.ResponseWriter, r *http.Request, h http.Handler) {
 	responseBodyR, responseBodyW := io.Pipe()
 	go func() {
 		<-ctx.Done()
+		requestBodyW.CloseWithError(io.EOF)
 		responseBodyW.CloseWithError(io.EOF)
-		responseBodyR.CloseWithError(io.EOF)
-		requestBodyR.Close()
-		requestBodyW.Close()
 	}()
 
 	response := newInMemoryResponseWriter(responseBodyW)
 	go func() {
-		log.Println("calling ServeHTTP")
 		h.ServeHTTP(response, request)
-		log.Println("done calling ServeHTTP")
 		cancelFn()
 	}()
 
 	// read loop -- take messages from websocket and write to http request
 	go func() {
+		defer func() {
+			cancelFn()
+		}()
 		for {
 			select {
 			case <-ctx.Done():
