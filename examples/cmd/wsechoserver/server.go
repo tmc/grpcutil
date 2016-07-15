@@ -9,7 +9,7 @@ import (
 
 type Server struct{}
 
-func (s *Server) Stream(_ *echoserver.Void, stream echoserver.EchoService_StreamServer) error {
+func (s *Server) Stream(_ *echoserver.Empty, stream echoserver.EchoService_StreamServer) error {
 	start := time.Now()
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Second)

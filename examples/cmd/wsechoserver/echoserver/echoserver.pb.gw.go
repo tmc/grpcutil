@@ -74,7 +74,7 @@ func request_EchoService_Echo_0(ctx context.Context, marshaler runtime.Marshaler
 }
 
 func request_EchoService_Stream_0(ctx context.Context, marshaler runtime.Marshaler, client EchoServiceClient, req *http.Request, pathParams map[string]string) (EchoService_StreamClient, runtime.ServerMetadata, error) {
-	var protoReq Void
+	var protoReq Empty
 	var metadata runtime.ServerMetadata
 
 	stream, err := client.Stream(ctx, &protoReq)

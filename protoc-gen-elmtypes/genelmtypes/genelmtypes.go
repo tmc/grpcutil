@@ -3,12 +3,13 @@ package genelmtypes
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
 type config struct {
@@ -60,6 +61,9 @@ func (t *objectElmType) ElmType() string {
 	fields := []string{}
 	for _, f := range t.Fields {
 		fields = append(fields, fmt.Sprintf("  %s: Maybe %s", f.ElmTypeName(), f.ElmType()))
+	}
+	if len(fields) == 0 {
+		return fmt.Sprintf("{}")
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
 }
@@ -202,11 +206,27 @@ func generateElmTypes(file *descriptor.File, registry *descriptor.Registry, qual
 	}
 
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("").Parse("-- this is a generated file\n{{range .}}type {{if .IsTypeAlias}}alias {{end}}{{.ElmTypeName}} = {{.ElmType}}\n\n{{end}}")
+	tmpl, err := template.New("").Parse(`-- this is a generated file
+module {{.ModuleName}} exposing (..)
+
+{{range .Types}}type {{if .IsTypeAlias}}alias {{end}}{{.ElmTypeName}} = {{.ElmType}}
+
+{{end}}
+`)
 	if err != nil {
 		return "", err
 	}
-	err = tmpl.Execute(buf, result)
+
+	name := file.GetName()
+	ext := filepath.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+	err = tmpl.Execute(buf, struct {
+		ModuleName string
+		Types      []ElmType
+	}{
+		ModuleName: strings.Title(base),
+		Types:      result,
+	})
 	if err != nil {
 		return "", err
 	}

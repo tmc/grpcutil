@@ -1,4 +1,6 @@
 -- this is a generated file
+module Simple exposing (..)
+
 type SearchRequestCorpus = UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO
 
 type alias SearchRequest = {
@@ -13,4 +15,5 @@ type alias SearchResponse = {
   num_results: Maybe Int,
   original_request: Maybe SearchRequest
 }
+
 

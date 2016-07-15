@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
 var (
@@ -41,7 +41,7 @@ func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool) ([]*
 		name := file.GetName()
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
-		output := fmt.Sprintf("%s_types.elm", base)
+		output := strings.Title(fmt.Sprintf("%s.elm", base))
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    proto.String(output),
 			Content: proto.String(code),
