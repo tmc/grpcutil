@@ -13,9 +13,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gengo/grpc-gateway/runtime"
-	"github.com/gengo/grpc-gateway/utilities"
 	"github.com/golang/protobuf/proto"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/utilities"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -38,9 +38,6 @@ func request_EchoService_Echo_0(ctx context.Context, marshaler runtime.Marshaler
 	handleSend := func() error {
 		var protoReq EchoRequest
 		err = dec.Decode(&protoReq)
-		if err == io.EOF {
-			return err
-		}
 		if err != nil {
 			grpclog.Printf("Failed to decode request: %v", err)
 			return err

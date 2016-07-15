@@ -10,7 +10,7 @@ import (
 
 	_ "golang.org/x/net/trace"
 
-	"github.com/gengo/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/golang/glog"
 	"github.com/tmc/grpcutils"
 	"github.com/tmc/grpcutils/examples/cmd/wsechoserver/echoserver"

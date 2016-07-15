@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
