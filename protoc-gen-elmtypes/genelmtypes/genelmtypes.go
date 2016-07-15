@@ -3,9 +3,11 @@ package genelmtypes
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/davecgh/go-spew/spew"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -16,8 +18,27 @@ type config struct {
 	alwaysQualifyTypeNames bool
 }
 
+func lowerFirst(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	result := []rune(s)
+	result[0] = unicode.ToLower(result[0])
+	return string(result)
+}
+
+func isPrimitive(typeName string) bool {
+	return map[string]bool{
+		"String":  true,
+		"Int":     true,
+		"Float":   true,
+		"Boolean": true,
+	}[typeName]
+}
+
 type ElmType interface {
 	ElmType() string
+	ElmTypeDecoder() string
 	IsTypeAlias() bool
 }
 type NamedElmType interface {
@@ -27,14 +48,23 @@ type NamedElmType interface {
 
 type simpleElmType string
 
-func (s simpleElmType) ElmType() string   { return string(s) }
+func (s simpleElmType) ElmType() string { return string(s) }
+func (s simpleElmType) ElmTypeDecoder() string {
+	if isPrimitive(string(s)) {
+		return strings.ToLower(string(s))
+	}
+	return string(s)
+}
 func (s simpleElmType) IsTypeAlias() bool { return false }
 
 type repeatedElmType struct {
 	t ElmType
 }
 
-func (r repeatedElmType) ElmType() string   { return fmt.Sprintf("List %s", r.t.ElmType()) }
+func (r repeatedElmType) ElmType() string { return fmt.Sprintf("List %s", r.t.ElmType()) }
+func (r repeatedElmType) ElmTypeDecoder() string {
+	return fmt.Sprintf("(list %s)", r.t.ElmTypeDecoder())
+}
 func (r repeatedElmType) IsTypeAlias() bool { return false }
 
 type namedElmType struct {
@@ -45,6 +75,20 @@ type namedElmType struct {
 func (t *namedElmType) ElmType() string {
 	return t.Type.ElmType()
 	return fmt.Sprintf("%s = %s", t.Name, t.Type.ElmType())
+}
+func (t *namedElmType) ElmTypeDecoder() string {
+	switch underlying := t.Type.(type) {
+	case *objectElmType:
+		nFields := len(underlying.Fields)
+		if nFields == 0 {
+			log.Println("0 fields")
+			return ""
+		}
+		return fmt.Sprintf("%s = object%d %s %s", lowerFirst(t.Name), nFields, t.Name, underlying.ElmTypeDecoder())
+
+	default:
+		return fmt.Sprintf("(maybe (\"%s\" := %s))", t.Name, t.Type.ElmTypeDecoder())
+	}
 }
 func (t *namedElmType) ElmTypeName() string {
 	return t.Name
@@ -66,6 +110,14 @@ func (t *objectElmType) ElmType() string {
 		return fmt.Sprintf("{}")
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
+}
+
+func (t *objectElmType) ElmTypeDecoder() string {
+	fields := []string{}
+	for _, f := range t.Fields {
+		fields = append(fields, f.ElmTypeDecoder())
+	}
+	return strings.Join(fields, " ")
 }
 
 func (cfg config) fqmnToType(fqmn string, registry *descriptor.Registry) (ElmType, error) {
@@ -206,10 +258,18 @@ func generateElmTypes(file *descriptor.File, registry *descriptor.Registry, qual
 	}
 
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("").Parse(`-- this is a generated file
+	tmpl, err := template.New("").Funcs(map[string]interface{}{
+		"lowerFirst": lowerFirst,
+	}).Parse(`-- this is a generated file
 module {{.ModuleName}} exposing (..)
+import Json.Encode as JE
+import Json.Decode exposing (..)
 
 {{range .Types}}type {{if .IsTypeAlias}}alias {{end}}{{.ElmTypeName}} = {{.ElmType}}
+
+{{end}}
+
+{{range .Types}}{{.ElmTypeDecoder}}
 
 {{end}}
 `)

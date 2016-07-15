@@ -41,7 +41,7 @@ func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool) ([]*
 		name := file.GetName()
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
-		output := strings.Title(fmt.Sprintf("%s.elm", base))
+		output := fmt.Sprintf("%s.elm", strings.Title(base))
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    proto.String(output),
 			Content: proto.String(code),
