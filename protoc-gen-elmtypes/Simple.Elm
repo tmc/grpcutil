@@ -1,5 +1,7 @@
 -- this is a generated file
 module Simple exposing (..)
+import Json.Encode as JE
+import Json.Decode exposing (..)
 
 type SearchRequestCorpus = UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO
 
@@ -15,5 +17,13 @@ type alias SearchResponse = {
   num_results: Maybe Int,
   original_request: Maybe SearchRequest
 }
+
+
+searchRequestCorpus : Decoder SearchRequestCorpus
+searchRequestCorpus = -- (UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO)
+
+searchRequest = object4 SearchRequest (maybe ("query" := string)) (maybe ("page_number" := int)) (maybe ("result_per_page" := int)) (maybe ("corpus" := searchRequestCorpus))
+
+searchResponse = object3 SearchResponse (maybe ("results" := (list string))) (maybe ("num_results" := int)) (maybe ("original_request" := searchRequest))
 
 
