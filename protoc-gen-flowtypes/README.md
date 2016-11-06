@@ -3,6 +3,8 @@ protoc-gen-flowtypes
 
 Generate flowtype type definitions for proto3 messages and enums.
 
+Contributions welcome.
+
 ```sh
 $ cat simple.proto
 ```
@@ -31,10 +33,14 @@ message SearchResponse {
   SearchRequest original_request = 3;
 }
 ```
+
+# example use:
 ```sh
 $ protoc -I. --flowtypes_out=. simple.proto
 $ cat simpleTypes.js
 ```
+
+# [simpleTypes.js](simpleTypes.js):
 ```js
 /* @flow */
 export type SearchRequestCorpus = "UNIVERSAL" | "WEB" | "IMAGES" | "LOCAL" | "NEWS" | "PRODUCTS" | "VIDEO";

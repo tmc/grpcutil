@@ -19,11 +19,11 @@ type alias SearchResponse = {
 }
 
 
-searchRequestCorpus : Decoder SearchRequestCorpus
-searchRequestCorpus = -- (UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO)
 
-searchRequest = object4 SearchRequest (maybe ("query" := string)) (maybe ("page_number" := int)) (maybe ("result_per_page" := int)) (maybe ("corpus" := searchRequestCorpus))
+(maybe ("SearchRequestCorpus" := UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO))
 
-searchResponse = object3 SearchResponse (maybe ("results" := (list string))) (maybe ("num_results" := int)) (maybe ("original_request" := searchRequest))
+searchRequest = object4 SearchRequest (maybe ("query" := string)) (maybe ("page_number" := int)) (maybe ("result_per_page" := int)) (maybe ("corpus" := SearchRequestCorpus))
+
+searchResponse = object3 SearchResponse (maybe ("results" := (list string))) (maybe ("num_results" := int)) (maybe ("original_request" := SearchRequest))
 
 

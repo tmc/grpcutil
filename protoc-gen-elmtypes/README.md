@@ -3,6 +3,8 @@ protoc-gen-elmtypes
 
 Generate elm type definitions for proto3 messages and enums.
 
+Contributions welcome.
+
 ```sh
 $ cat simple.proto
 ```
@@ -31,13 +33,19 @@ message SearchResponse {
   SearchRequest original_request = 3;
 }
 ```
+
+# Example use
 ```sh
 $ protoc -I. --elmtypes_out=. simple.proto
-$ cat simple_types.elm
 ```
+This generates Simple.elm.
+
+## [Simple.elm](Simple.elm)
 ```elm
 -- this is a generated file
 module Simple exposing (..)
+import Json.Encode as JE
+import Json.Decode exposing (..)
 
 type SearchRequestCorpus = UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO
 
@@ -55,3 +63,10 @@ type alias SearchResponse = {
 }
 
 
+
+(maybe ("SearchRequestCorpus" := UNIVERSAL | WEB | IMAGES | LOCAL | NEWS | PRODUCTS | VIDEO))
+
+searchRequest = object4 SearchRequest (maybe ("query" := string)) (maybe ("page_number" := int)) (maybe ("result_per_page" := int)) (maybe ("corpus" := SearchRequestCorpus))
+
+searchResponse = object3 SearchResponse (maybe ("results" := (list string))) (maybe ("num_results" := int)) (maybe ("original_request" := SearchRequest))
+````
