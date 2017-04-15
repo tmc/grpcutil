@@ -7,11 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/tmc/grpcutils/protoc-gen-elmtypes/genelmtypes"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/tmc/grpcutil/protoc-gen-elmtypes/genelmtypes"
 )
 
 var (

@@ -1,4 +1,4 @@
-package grpcutils
+package grpcutil
 
 import "net/http"
 
