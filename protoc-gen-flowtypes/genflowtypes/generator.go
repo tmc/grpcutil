@@ -27,7 +27,7 @@ func New(reg *descriptor.Registry) *Generator {
 }
 
 // Generate processes the given proto files and produces flowtype output.
-func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool, nameTemplate string) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool, nameOverride string) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
@@ -43,12 +43,15 @@ func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embe
 		name := file.GetName()
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
-		output := fmt.Sprintf(nameTemplate, base)
+		outputName := fmt.Sprintf("%s_types.js", base)
+		if nameOverride != "" {
+			outputName = nameOverride
+		}
 		files = append(files, &plugin.CodeGeneratorResponse_File{
-			Name:    proto.String(output),
+			Name:    proto.String(outputName),
 			Content: proto.String(code),
 		})
-		glog.V(1).Infof("Will emit %s", output)
+		glog.V(1).Infof("Will emit %s", outputName)
 	}
 	return files, nil
 }
