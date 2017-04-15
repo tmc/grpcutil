@@ -7,17 +7,18 @@ import (
 	"os"
 	"strings"
 
-	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/tmc/grpcutils/protoc-gen-flowtypes/genflowtypes"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/tmc/grpcutil/protoc-gen-flowtypes/genflowtypes"
 )
 
 var (
 	importPrefix           = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
 	flagAlwaysQualifyTypes = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
 	flagEmbedEnums         = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
+	flagNameTemplate       = flag.String("output_template", "%s_types.js", "fmt.Sprintf template to format the output file name given the input file base name")
 	file                   = flag.String("file", "stdin", "where to load data from")
 )
 
@@ -89,7 +90,7 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, *flagAlwaysQualifyTypes, *flagEmbedEnums)
+	out, err := g.Generate(targets, *flagAlwaysQualifyTypes, *flagEmbedEnums, *flagNameTemplate)
 	glog.V(1).Info("Processed code generator request")
 	if err != nil {
 		emitError(err)

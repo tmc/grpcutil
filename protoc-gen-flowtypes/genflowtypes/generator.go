@@ -6,26 +6,28 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
 var (
 	errNoTargetService = errors.New("no target service defined in the file")
 )
 
-type generator struct {
+// Generator processes proto descriptors and generates flow type definitions.
+type Generator struct {
 	reg *descriptor.Registry
 }
 
 // New returns a new generator which generates flowtype type definition files.
-func New(reg *descriptor.Registry) *generator {
-	return &generator{reg: reg}
+func New(reg *descriptor.Registry) *Generator {
+	return &Generator{reg: reg}
 }
 
-func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool) ([]*plugin.CodeGeneratorResponse_File, error) {
+// Generate processes the given proto files and produces flowtype output.
+func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool, nameTemplate string) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
@@ -41,7 +43,7 @@ func (g *generator) Generate(targets []*descriptor.File, qualifyTypes bool, embe
 		name := file.GetName()
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
-		output := fmt.Sprintf("%sTypes.js", base)
+		output := fmt.Sprintf(nameTemplate, base)
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    proto.String(output),
 			Content: proto.String(code),
