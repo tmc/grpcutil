@@ -10,11 +10,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
-type config struct {
-	alwaysQualifyTypeNames bool
-	embedEnums             bool
-}
-
 type FlowType interface {
 	FlowType() string
 }
@@ -26,6 +21,10 @@ type NamedFlowType interface {
 type simpleFlowType string
 
 func (s simpleFlowType) FlowType() string { return string(s) }
+
+type messageFlowType string
+
+func (s messageFlowType) FlowType() string { return string(s) }
 
 type repeatedFlowType struct {
 	t FlowType
@@ -47,18 +46,23 @@ func (t *namedFlowType) FlowTypeName() string {
 }
 
 type objectFlowType struct {
-	Fields []NamedFlowType
+	Fields  []NamedFlowType
+	Options Options
 }
 
 func (t *objectFlowType) FlowType() string {
 	fields := []string{}
 	for _, f := range t.Fields {
-		fields = append(fields, fmt.Sprintf("  %s?: %s", f.FlowTypeName(), f.FlowType()))
+		optionalIndicator := "?"
+		if _, simple := f.(*namedFlowType).Type.(simpleFlowType); simple && t.Options.OptonalSimpleTypes == false {
+			optionalIndicator = ""
+		}
+		fields = append(fields, fmt.Sprintf("  %s%s: %s", f.FlowTypeName(), optionalIndicator, f.FlowType()))
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
 }
 
-func (cfg config) fqmnToType(fqmn string, registry *descriptor.Registry) (FlowType, error) {
+func (cfg Options) fqmnToType(fqmn string, registry *descriptor.Registry) (FlowType, error) {
 	m, err := registry.LookupMsg("", fqmn)
 	if err != nil {
 		return nil, err
@@ -66,7 +70,7 @@ func (cfg config) fqmnToType(fqmn string, registry *descriptor.Registry) (FlowTy
 	return cfg.messageToFlowType(m, registry)
 }
 
-func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (NamedFlowType, error) {
+func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (NamedFlowType, error) {
 	// FieldMessage
 	var fieldType FlowType = simpleFlowType("any")
 	switch f.GetType() {
@@ -106,7 +110,7 @@ func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (Na
 		if err != nil {
 			return nil, err
 		}
-		fieldType = simpleFlowType(cfg.messageTypeName(ft))
+		fieldType = messageFlowType(cfg.messageTypeName(ft))
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
 		fieldType = simpleFlowType("string") // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
@@ -115,7 +119,7 @@ func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (Na
 			return nil, err
 		}
 
-		if cfg.embedEnums {
+		if cfg.EmbedEnums {
 			fieldType, err = cfg.enumToFlowType(e, reg)
 			if err != nil {
 				return nil, err
@@ -131,8 +135,11 @@ func (cfg config) fieldToType(f *descriptor.Field, reg *descriptor.Registry) (Na
 	return &namedFlowType{Name: f.GetName(), Type: fieldType}, nil
 }
 
-func (cfg config) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowType, error) {
-	t := &objectFlowType{Fields: []NamedFlowType{}}
+func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowType, error) {
+	t := &objectFlowType{
+		Fields:  []NamedFlowType{},
+		Options: cfg,
+	}
 	for _, f := range m.Fields {
 		field, err := cfg.fieldToType(f, reg)
 		if err != nil {
@@ -143,9 +150,9 @@ func (cfg config) messageToFlowType(m *descriptor.Message, reg *descriptor.Regis
 	return &namedFlowType{Name: cfg.messageTypeName(m), Type: t}, nil
 }
 
-func (cfg config) enumTypeName(e *descriptor.Enum) string {
+func (cfg Options) enumTypeName(e *descriptor.Enum) string {
 	name := strings.Replace(e.FQEN(), ".", "", -1)
-	if !cfg.alwaysQualifyTypeNames {
+	if !cfg.AlwaysQualifyTypes {
 		if strings.HasPrefix(name, e.File.GoPkg.Name) {
 			name = name[len(e.File.GoPkg.Name):]
 		}
@@ -153,9 +160,9 @@ func (cfg config) enumTypeName(e *descriptor.Enum) string {
 	return name
 }
 
-func (cfg config) messageTypeName(m *descriptor.Message) string {
+func (cfg Options) messageTypeName(m *descriptor.Message) string {
 	name := strings.Replace(m.FQMN(), ".", "", -1)
-	if !cfg.alwaysQualifyTypeNames {
+	if !cfg.AlwaysQualifyTypes {
 		if strings.HasPrefix(name, m.File.GoPkg.Name) {
 			name = name[len(m.File.GoPkg.Name):]
 		}
@@ -163,7 +170,7 @@ func (cfg config) messageTypeName(m *descriptor.Message) string {
 	return name
 }
 
-func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowType, error) {
+func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowType, error) {
 	options := []string{}
 	for _, v := range e.Value {
 		options = append(options, fmt.Sprintf(`"%s"`, v.GetName()))
@@ -175,25 +182,21 @@ func (cfg config) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (
 	}, nil
 }
 
-func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, qualifyTypes bool, embedEnums bool) (string, error) {
+func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opts Options) (string, error) {
 	result := []FlowType{}
 	f, err := registry.LookupFile(file.GetName())
 	if err != nil {
 		return "", err
 	}
-	cfg := config{
-		alwaysQualifyTypeNames: qualifyTypes,
-		embedEnums:             embedEnums,
-	}
 	for _, enum := range f.Enums {
-		t, err := cfg.enumToFlowType(enum, registry)
+		t, err := opts.enumToFlowType(enum, registry)
 		if err != nil {
 			return "", err
 		}
 		result = append(result, t)
 	}
 	for _, message := range f.Messages {
-		t, err := cfg.messageToFlowType(message, registry)
+		t, err := opts.messageToFlowType(message, registry)
 		if err != nil {
 			return "", err
 		}

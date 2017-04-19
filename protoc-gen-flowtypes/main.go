@@ -15,11 +15,12 @@ import (
 )
 
 var (
-	importPrefix           = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
-	flagAlwaysQualifyTypes = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
-	flagEmbedEnums         = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
-	flagNameOverride       = flag.String("output", "", "output filename override")
-	file                   = flag.String("file", "stdin", "where to load data from")
+	importPrefix            = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
+	flagAlwaysQualifyTypes  = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
+	flagEmbedEnums          = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
+	flagFilenameOverride    = flag.String("output", "", "output filename override")
+	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "make simple types marked as non-optional")
+	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
@@ -90,7 +91,13 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, *flagAlwaysQualifyTypes, *flagEmbedEnums, *flagNameOverride)
+	out, err := g.Generate(targets, genflowtypes.Options{
+		AlwaysQualifyTypes: *flagAlwaysQualifyTypes,
+		EmbedEnums:         *flagEmbedEnums,
+		OptonalSimpleTypes: *flagOptionalSimpleTypes,
+		FilenameOverride:   *flagFilenameOverride,
+	})
+
 	glog.V(1).Info("Processed code generator request")
 	if err != nil {
 		emitError(err)

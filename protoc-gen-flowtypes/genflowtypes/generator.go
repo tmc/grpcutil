@@ -26,12 +26,20 @@ func New(reg *descriptor.Registry) *Generator {
 	return &Generator{reg: reg}
 }
 
+// Options describes output parameters
+type Options struct {
+	AlwaysQualifyTypes bool
+	EmbedEnums         bool
+	OptonalSimpleTypes bool
+	FilenameOverride   string
+}
+
 // Generate processes the given proto files and produces flowtype output.
-func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embedEnums bool, nameOverride string) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *Generator) Generate(targets []*descriptor.File, opts Options) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
-		code, err := generateFlowTypes(file, g.reg, qualifyTypes, embedEnums)
+		code, err := generateFlowTypes(file, g.reg, opts)
 		if err == errNoTargetService {
 			glog.V(1).Infof("%s: %v", file.GetName(), err)
 			continue
@@ -44,8 +52,8 @@ func (g *Generator) Generate(targets []*descriptor.File, qualifyTypes bool, embe
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
 		outputName := fmt.Sprintf("%s_types.js", base)
-		if nameOverride != "" {
-			outputName = nameOverride
+		if opts.FilenameOverride != "" {
+			outputName = opts.FilenameOverride
 		}
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    proto.String(outputName),
