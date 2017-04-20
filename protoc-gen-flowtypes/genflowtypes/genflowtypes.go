@@ -59,7 +59,7 @@ func (r repeatedType) FlowType() string { return fmt.Sprintf("Array<%s>", r.Flow
 type namedType struct {
 	Flower
 	name     string
-	required bool // TODO(tmc): move to interface
+	required bool
 }
 
 func (t *namedType) Name() string {
@@ -159,7 +159,7 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 	return &namedType{Flower: fieldType, name: f.GetName(), required: required}, nil
 }
 
-// this is a hack to use the pbdescptor from golang/proto instead of gogo/proto
+// this is a hack to use the FieldOptions descriptor from golang/proto instead of gogo/proto
 var E_Field = &proto.ExtensionDesc{
 	ExtendedType:  (*pbdescriptor.FieldOptions)(nil),
 	ExtensionType: validator.E_Field.ExtensionType,
