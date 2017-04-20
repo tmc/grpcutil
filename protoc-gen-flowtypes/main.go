@@ -19,7 +19,7 @@ var (
 	flagAlwaysQualifyTypes  = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
 	flagEmbedEnums          = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
 	flagFilenameOverride    = flag.String("output", "", "output filename override")
-	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "make simple types marked as non-optional")
+	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "marks default optionality for 'simple' field values")
 	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
