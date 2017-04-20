@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+// optional to include validation
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+
 message SearchRequest {
   string query = 1;
   int32 page_number = 2;
@@ -14,6 +17,7 @@ message SearchRequest {
     VIDEO = 6;
   }
   Corpus corpus = 4;
+  int64 example_required = 5 [(validator.field) = {msg_exists : true}];
 }
 
 message SearchResponse {

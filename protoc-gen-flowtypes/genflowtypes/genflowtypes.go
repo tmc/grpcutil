@@ -21,10 +21,10 @@ type Flower interface {
 // NamedFlower is a Flower with a name
 type NamedFlower interface {
 	Flower
-	FlowTypeName() string
+	Name() string
 }
 
-func newSimpleFlowType(typeString string, required bool) *simpleType {
+func newSimpleType(typeString string, required bool) *simpleType {
 	return &simpleType{typeString, required}
 }
 
@@ -41,36 +41,29 @@ type messageType struct {
 }
 
 func newMessageFlowType(typeName string, required bool) *messageType {
-	s := newSimpleFlowType(typeName, required)
+	s := newSimpleType(typeName, required)
 	return &messageType{s}
 }
 
-type repeatedFlowType struct {
+type repeatedType struct {
 	Flower
 	required bool
 }
 
-func newRepeatedFlowType(underlying Flower, required bool) *repeatedFlowType {
-	return &repeatedFlowType{Flower: underlying, required: required}
+func newRepeatedFlowType(underlying Flower, required bool) *repeatedType {
+	return &repeatedType{Flower: underlying, required: required}
 }
 
-func (r repeatedFlowType) FlowType() string { return fmt.Sprintf("Array<%s>", r.Flower.FlowType()) }
+func (r repeatedType) FlowType() string { return fmt.Sprintf("Array<%s>", r.Flower.FlowType()) }
 
-type namedFlowType struct {
+type namedType struct {
 	Flower
-	Name     string
+	name     string
 	required bool // TODO(tmc): move to interface
 }
 
-/*
-func (t *namedFlowType) FlowType() string {
-	return t.Type.FlowType()
-	return fmt.Sprintf("%s = %s", t.Name, t.Type.FlowType())
-}
-*/
-
-func (t *namedFlowType) FlowTypeName() string {
-	return t.Name
+func (t *namedType) Name() string {
+	return t.name
 }
 
 type objectFlowType struct {
@@ -86,12 +79,7 @@ func (t *objectFlowType) FlowType() string {
 		if f.IsRequired() {
 			optionalIndicator = ""
 		}
-		/*
-			if _, simple := f.(*namedFlowType).Flower.(simpleType); simple && t.Options.OptonalSimpleTypes == false {
-				optionalIndicator = ""
-			}
-		*/
-		fields = append(fields, fmt.Sprintf("  %s%s: %s", f.FlowTypeName(), optionalIndicator, f.FlowType()))
+		fields = append(fields, fmt.Sprintf("  %s%s: %s", f.Name(), optionalIndicator, f.FlowType()))
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
 }
@@ -108,7 +96,7 @@ func (cfg Options) fqmnToType(fqmn string, registry *descriptor.Registry) (Flowe
 
 func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, required bool) (NamedFlower, error) {
 	// FieldMessage
-	var fieldType Flower = newSimpleFlowType("any", required)
+	var fieldType Flower = newSimpleType("any", required)
 	switch f.GetType() {
 	case pbdescriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		fallthrough
@@ -133,13 +121,13 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT32:
 		fallthrough
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT64:
-		fieldType = newSimpleFlowType("number", required)
+		fieldType = newSimpleType("number", required)
 	case pbdescriptor.FieldDescriptorProto_TYPE_BOOL:
-		fieldType = newSimpleFlowType("boolean", required)
+		fieldType = newSimpleType("boolean", required)
 	case pbdescriptor.FieldDescriptorProto_TYPE_STRING:
-		fieldType = newSimpleFlowType("string", required)
+		fieldType = newSimpleType("string", required)
 	case pbdescriptor.FieldDescriptorProto_TYPE_GROUP:
-		fieldType = newSimpleFlowType("any", required) // , required?
+		fieldType = newSimpleType("any", required) // , required?
 	case pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		// TODO: should resolve type name relative to this type
 		ft, err := reg.LookupMsg("", f.GetTypeName())
@@ -148,7 +136,7 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 		}
 		fieldType = newMessageFlowType(cfg.messageTypeName(ft), required)
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
-		fieldType = newSimpleFlowType("string", required) // could be more correct
+		fieldType = newSimpleType("string", required) // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
 		e, err := reg.LookupEnum("", f.GetTypeName())
 		if err != nil {
@@ -162,22 +150,23 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 			}
 		} else {
 			name := cfg.enumTypeName(e)
-			fieldType = newSimpleFlowType(name, required)
+			fieldType = newSimpleType(name, required)
 		}
 	}
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
 		fieldType = newRepeatedFlowType(fieldType, required)
 	}
-	return &namedFlowType{Flower: fieldType, Name: f.GetName(), required: required}, nil
+	return &namedType{Flower: fieldType, name: f.GetName(), required: required}, nil
 }
 
+// this is a hack to use the pbdescptor from golang/proto instead of gogo/proto
 var E_Field = &proto.ExtensionDesc{
 	ExtendedType:  (*pbdescriptor.FieldOptions)(nil),
-	ExtensionType: (*validator.FieldValidator)(nil),
-	Field:         65020,
-	Name:          "validator.field",
-	Tag:           "bytes,65020,opt,name=field",
-	Filename:      "validator.proto",
+	ExtensionType: validator.E_Field.ExtensionType,
+	Field:         validator.E_Field.Field,
+	Name:          validator.E_Field.Name,
+	Tag:           validator.E_Field.Tag,
+	Filename:      validator.E_Field.Filename,
 }
 
 func init() {
@@ -211,7 +200,7 @@ func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Regi
 		}
 		t.Fields = append(t.Fields, field)
 	}
-	return &namedFlowType{Flower: t, Name: cfg.messageTypeName(m)}, nil
+	return &namedType{Flower: t, name: cfg.messageTypeName(m)}, nil
 }
 
 func (cfg Options) enumTypeName(e *descriptor.Enum) string {
@@ -240,9 +229,9 @@ func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) 
 		options = append(options, fmt.Sprintf(`"%s"`, v.GetName()))
 	}
 	name := cfg.enumTypeName(e)
-	return &namedFlowType{
-		Flower: newSimpleFlowType(strings.Join(options, " | "), false),
-		Name:   name,
+	return &namedType{
+		Flower: newSimpleType(strings.Join(options, " | "), false),
+		name:   name,
 	}, nil
 }
 
@@ -268,7 +257,7 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 	}
 
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("").Parse("/* @flow */\n// Code generated by protoc-gen-flowtypes DO NOT EDIT.\n\n{{range .}}export type {{.FlowTypeName}} = {{.FlowType}};\n\n{{end}}")
+	tmpl, err := template.New("").Parse("/* @flow */\n// Code generated by protoc-gen-flowtypes DO NOT EDIT.\n\n{{range .}}export type {{.Name}} = {{.FlowType}};\n\n{{end}}")
 	if err != nil {
 		return "", err
 	}
