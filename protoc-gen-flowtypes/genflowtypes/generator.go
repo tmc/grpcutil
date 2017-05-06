@@ -32,6 +32,7 @@ type Options struct {
 	EmbedEnums         bool
 	OptonalSimpleTypes bool
 	FilenameOverride   string
+	EmitEnumZeros      bool
 }
 
 // Generate processes the given proto files and produces flowtype output.

@@ -226,6 +226,9 @@ func (cfg Options) messageTypeName(m *descriptor.Message) string {
 func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (Flower, error) {
 	options := []string{}
 	for _, v := range e.Value {
+		if !cfg.EmitEnumZeros && v.GetNumber() == 0 {
+			continue
+		}
 		options = append(options, fmt.Sprintf(`"%s"`, v.GetName()))
 	}
 	name := cfg.enumTypeName(e)

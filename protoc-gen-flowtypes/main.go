@@ -20,6 +20,7 @@ var (
 	flagEmbedEnums          = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
 	flagFilenameOverride    = flag.String("output", "", "output filename override")
 	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "marks default optionality for 'simple' field values")
+	flagEmitEnumZeros       = flag.Bool("enum_zeros", false, "emit enum names of value zero")
 	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
@@ -96,6 +97,7 @@ func main() {
 		EmbedEnums:         *flagEmbedEnums,
 		OptonalSimpleTypes: *flagOptionalSimpleTypes,
 		FilenameOverride:   *flagFilenameOverride,
+		EmitEnumZeros:      *flagEmitEnumZeros,
 	})
 
 	glog.V(1).Info("Processed code generator request")
