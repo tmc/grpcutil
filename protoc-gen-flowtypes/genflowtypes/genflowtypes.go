@@ -24,6 +24,12 @@ type NamedFlowTyper interface {
 	Name() string
 }
 
+// knownTypeMap is a map of paths for known proto types to their desired
+// flowtypes.
+var knownTypeMap = map[string]string{
+	".google.protobuf.Timestamp": "string",
+}
+
 func newSimpleType(typeString string, required bool) *primitiveType {
 	return &primitiveType{typeString, required}
 }
@@ -134,7 +140,12 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 		if err != nil {
 			return nil, err
 		}
-		fieldType = newMessageFlowType(cfg.messageTypeName(ft), required)
+
+		if flowType, present := knownTypeMap[ft.FQMN()]; present {
+			fieldType = newSimpleType(flowType, required)
+		} else {
+			fieldType = newMessageFlowType(cfg.messageTypeName(ft), required)
+		}
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
 		fieldType = newSimpleType("string", required) // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
