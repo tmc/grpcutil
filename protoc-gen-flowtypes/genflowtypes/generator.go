@@ -33,6 +33,7 @@ type Options struct {
 	OptonalSimpleTypes bool
 	FilenameOverride   string
 	EmitEnumZeros      bool
+	InputID            string
 }
 
 // Generate processes the given proto files and produces flowtype output.

@@ -12,32 +12,32 @@ import (
 	"github.com/mwitkow/go-proto-validators"
 )
 
-// Flower is a flow language type
-type Flower interface {
+// FlowTyper is a flow language type
+type FlowTyper interface {
 	FlowType() string
 	IsRequired() bool
 }
 
-// NamedFlower is a Flower with a name
-type NamedFlower interface {
-	Flower
+// NamedFlowTyper is a FlowTyper with a name
+type NamedFlowTyper interface {
+	FlowTyper
 	Name() string
 }
 
-func newSimpleType(typeString string, required bool) *simpleType {
-	return &simpleType{typeString, required}
+func newSimpleType(typeString string, required bool) *primitiveType {
+	return &primitiveType{typeString, required}
 }
 
-type simpleType struct {
+type primitiveType struct {
 	typeString string
 	required   bool
 }
 
-func (s simpleType) FlowType() string { return s.typeString }
-func (s simpleType) IsRequired() bool { return s.required }
+func (s primitiveType) FlowType() string { return s.typeString }
+func (s primitiveType) IsRequired() bool { return s.required }
 
 type messageType struct {
-	*simpleType
+	*primitiveType
 }
 
 func newMessageFlowType(typeName string, required bool) *messageType {
@@ -46,18 +46,18 @@ func newMessageFlowType(typeName string, required bool) *messageType {
 }
 
 type repeatedType struct {
-	Flower
+	FlowTyper
 	required bool
 }
 
-func newRepeatedFlowType(underlying Flower, required bool) *repeatedType {
-	return &repeatedType{Flower: underlying, required: required}
+func newRepeatedFlowType(underlying FlowTyper, required bool) *repeatedType {
+	return &repeatedType{FlowTyper: underlying, required: required}
 }
 
-func (r repeatedType) FlowType() string { return fmt.Sprintf("Array<%s>", r.Flower.FlowType()) }
+func (r repeatedType) FlowType() string { return fmt.Sprintf("Array<%s>", r.FlowTyper.FlowType()) }
 
 type namedType struct {
-	Flower
+	FlowTyper
 	name     string
 	required bool
 }
@@ -67,7 +67,7 @@ func (t *namedType) Name() string {
 }
 
 type objectFlowType struct {
-	Fields   []NamedFlower
+	Fields   []NamedFlowTyper
 	Options  Options
 	required bool
 }
@@ -86,7 +86,7 @@ func (t *objectFlowType) FlowType() string {
 
 func (t *objectFlowType) IsRequired() bool { return t.required }
 
-func (cfg Options) fqmnToType(fqmn string, registry *descriptor.Registry) (Flower, error) {
+func (cfg Options) fqmnToType(fqmn string, registry *descriptor.Registry) (FlowTyper, error) {
 	m, err := registry.LookupMsg("", fqmn)
 	if err != nil {
 		return nil, err
@@ -94,9 +94,9 @@ func (cfg Options) fqmnToType(fqmn string, registry *descriptor.Registry) (Flowe
 	return cfg.messageToFlowType(m, registry)
 }
 
-func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, required bool) (NamedFlower, error) {
+func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, required bool) (NamedFlowTyper, error) {
 	// FieldMessage
-	var fieldType Flower = newSimpleType("any", required)
+	var fieldType FlowTyper = newSimpleType("any", required)
 	switch f.GetType() {
 	case pbdescriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		fallthrough
@@ -156,7 +156,7 @@ func (cfg Options) fieldToType(f *descriptor.Field, reg *descriptor.Registry, re
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
 		fieldType = newRepeatedFlowType(fieldType, required)
 	}
-	return &namedType{Flower: fieldType, name: f.GetName(), required: required}, nil
+	return &namedType{FlowTyper: fieldType, name: f.GetName(), required: required}, nil
 }
 
 // this is a hack to use the FieldOptions descriptor from golang/proto instead of gogo/proto
@@ -184,9 +184,9 @@ func getFieldValidatorIfAny(field *pbdescriptor.FieldDescriptorProto) *validator
 	return nil
 }
 
-func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (Flower, error) {
+func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowTyper, error) {
 	t := &objectFlowType{
-		Fields:  []NamedFlower{},
+		Fields:  []NamedFlowTyper{},
 		Options: cfg,
 	}
 	for _, f := range m.Fields {
@@ -200,7 +200,7 @@ func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Regi
 		}
 		t.Fields = append(t.Fields, field)
 	}
-	return &namedType{Flower: t, name: cfg.messageTypeName(m)}, nil
+	return &namedType{FlowTyper: t, name: cfg.messageTypeName(m)}, nil
 }
 
 func (cfg Options) enumTypeName(e *descriptor.Enum) string {
@@ -223,7 +223,7 @@ func (cfg Options) messageTypeName(m *descriptor.Message) string {
 	return name
 }
 
-func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (Flower, error) {
+func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowTyper, error) {
 	options := []string{}
 	for _, v := range e.Value {
 		if !cfg.EmitEnumZeros && v.GetNumber() == 0 {
@@ -233,13 +233,13 @@ func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) 
 	}
 	name := cfg.enumTypeName(e)
 	return &namedType{
-		Flower: newSimpleType(strings.Join(options, " | "), false),
-		name:   name,
+		FlowTyper: newSimpleType(strings.Join(options, " | "), false),
+		name:      name,
 	}, nil
 }
 
 func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opts Options) (string, error) {
-	result := []Flower{}
+	result := []FlowTyper{}
 	f, err := registry.LookupFile(file.GetName())
 	if err != nil {
 		return "", err
@@ -263,15 +263,19 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 	tmpl, err := template.New("").Parse(`/* @flow */
 /* eslint-disable */
 // Code generated by protoc-gen-flowtypes DO NOT EDIT.
+// InputID: {{.InputID}}
 
-{{range .}}export type {{.Name}} = {{.FlowType}};
+{{range .Result}}export type {{.Name}} = {{.FlowType}};
 
 {{end}}
 `)
 	if err != nil {
 		return "", err
 	}
-	err = tmpl.Execute(buf, result)
+	err = tmpl.Execute(buf, struct {
+		Options
+		Result []FlowTyper
+	}{Options: opts, Result: result})
 	if err != nil {
 		return "", err
 	}

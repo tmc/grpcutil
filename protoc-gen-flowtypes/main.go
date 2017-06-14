@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/sha1"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -24,20 +26,22 @@ var (
 	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
-func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
+func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, string, error) {
 	glog.V(1).Info("Parsing code generator request")
 	input, err := ioutil.ReadAll(r)
 	if err != nil {
 		glog.Errorf("Failed to read code generator request: %v", err)
-		return nil, err
+		return nil, "", err
 	}
 	req := new(plugin.CodeGeneratorRequest)
 	if err = proto.Unmarshal(input, req); err != nil {
 		glog.Errorf("Failed to unmarshal code generator request: %v", err)
-		return nil, err
+		return nil, "", err
 	}
 	glog.V(1).Info("Parsed code generator request")
-	return req, nil
+	shasum := fmt.Sprintf("%x", sha1.Sum(input))
+	glog.V(1).Info("input sha sum:", shasum)
+	return req, shasum, nil
 }
 
 func main() {
@@ -51,7 +55,7 @@ func main() {
 	if *file != "stdin" {
 		f, _ = os.Open("input.txt")
 	}
-	req, err := parseReq(f)
+	req, inputSha, err := parseReq(f)
 	if err != nil {
 		glog.Fatal(err)
 	}
@@ -98,6 +102,7 @@ func main() {
 		OptonalSimpleTypes: *flagOptionalSimpleTypes,
 		FilenameOverride:   *flagFilenameOverride,
 		EmitEnumZeros:      *flagEmitEnumZeros,
+		InputID:            inputSha,
 	})
 
 	glog.V(1).Info("Processed code generator request")
