@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+// Well-known type that should be handled
+import "google/protobuf/timestamp.proto";
+
 // optional to include validation
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 
@@ -18,6 +21,7 @@ message SearchRequest {
   }
   Corpus corpus = 4;
   int64 example_required = 5 [(validator.field) = {msg_exists : true}];
+  google.protobuf.Timestamp sent_at = 6;
 }
 
 message SearchResponse {
