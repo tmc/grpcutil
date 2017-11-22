@@ -34,6 +34,7 @@ type Options struct {
 	FilenameOverride   string
 	EmitEnumZeros      bool
 	InputID            string
+	DumpJSON           bool
 }
 
 func defaultOutputNames(targets []*descriptor.File) []string {
