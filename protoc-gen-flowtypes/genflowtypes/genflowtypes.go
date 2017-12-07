@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
-	"github.com/mwitkow/go-proto-validators"
+	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
 // Dependencies maps packages names to imported type names.
@@ -22,6 +22,7 @@ type Dependencies map[string]map[string]bool
 type FlowTyper interface {
 	FlowType() string
 	IsRequired() bool
+	IsNullable() bool
 }
 
 // NamedFlowTyper is a FlowTyper with a name.
@@ -36,42 +37,43 @@ var knownTypeMap = map[string]string{
 	".google.protobuf.Timestamp": "string",
 }
 
-func newSimpleType(typeString string, required bool) *primitiveType {
-	return &primitiveType{typeString, required}
+func newSimpleType(typeString string, opts opts.Options) *primitiveType {
+	return &primitiveType{typeString, opts}
 }
 
 type primitiveType struct {
 	typeString string
-	required   bool
+	opts       opts.Options
 }
 
 func (s primitiveType) FlowType() string { return s.typeString }
-func (s primitiveType) IsRequired() bool { return s.required }
+func (s primitiveType) IsRequired() bool { return s.opts.GetRequired() }
+func (s primitiveType) IsNullable() bool { return s.opts.GetNullable() }
 
 type messageType struct {
 	*primitiveType
 }
 
-func newMessageFlowType(typeName string, required bool) *messageType {
-	s := newSimpleType(typeName, required)
+func newMessageFlowType(typeName string, opts opts.Options) *messageType {
+	s := newSimpleType(typeName, opts)
 	return &messageType{s}
 }
 
 type repeatedType struct {
 	FlowTyper
-	required bool
+	opts opts.Options
 }
 
-func newRepeatedFlowType(underlying FlowTyper, required bool) *repeatedType {
-	return &repeatedType{FlowTyper: underlying, required: required}
+func newRepeatedFlowType(underlying FlowTyper, opts opts.Options) *repeatedType {
+	return &repeatedType{FlowTyper: underlying, opts: opts}
 }
 
 func (r repeatedType) FlowType() string { return fmt.Sprintf("Array<%s>", r.FlowTyper.FlowType()) }
 
 type namedType struct {
 	FlowTyper
-	name     string
-	required bool
+	name string
+	opts opts.Options
 }
 
 func (t *namedType) Name() string {
@@ -79,28 +81,34 @@ func (t *namedType) Name() string {
 }
 
 type objectFlowType struct {
-	Fields   []NamedFlowTyper
-	Options  Options
-	required bool
+	Fields  []NamedFlowTyper
+	Options Options
+
+	opts opts.Options
 }
 
 func (t *objectFlowType) FlowType() string {
 	fields := []string{}
 	for _, f := range t.Fields {
 		optionalIndicator := "?"
+		nullableIndicator := "?"
 		if f.IsRequired() {
 			optionalIndicator = ""
 		}
-		fields = append(fields, fmt.Sprintf("  %s%s: %s", f.Name(), optionalIndicator, f.FlowType()))
+		if !f.IsNullable() {
+			nullableIndicator = ""
+		}
+		fields = append(fields, fmt.Sprintf("  %s%s: %s%s", f.Name(), optionalIndicator, nullableIndicator, f.FlowType()))
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
 }
 
-func (t *objectFlowType) IsRequired() bool { return t.required }
+func (t *objectFlowType) IsRequired() bool { return t.opts.GetRequired() }
+func (t *objectFlowType) IsNullable() bool { return t.opts.GetNullable() }
 
-func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, required bool) (NamedFlowTyper, Dependencies, error) {
+func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, opts opts.Options) (NamedFlowTyper, Dependencies, error) {
 	// FieldMessage
-	var fieldType FlowTyper = newSimpleType("any", required)
+	var fieldType FlowTyper = newSimpleType("any", opts)
 	// deps will hold the other package name if the field is an external reference.
 	deps := Dependencies{}
 	switch f.GetType() {
@@ -127,13 +135,13 @@ func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT32:
 		fallthrough
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT64:
-		fieldType = newSimpleType("number", required)
+		fieldType = newSimpleType("number", opts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_BOOL:
-		fieldType = newSimpleType("boolean", required)
+		fieldType = newSimpleType("boolean", opts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_STRING:
-		fieldType = newSimpleType("string", required)
+		fieldType = newSimpleType("string", opts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_GROUP:
-		fieldType = newSimpleType("any", required) // , required?
+		fieldType = newSimpleType("any", opts) // , required?
 	case pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		// TODO: should resolve type name relative to this type
 		ft, err := reg.LookupMsg("", f.GetTypeName())
@@ -141,9 +149,9 @@ func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.
 			return nil, nil, err
 		}
 		if flowType, present := knownTypeMap[ft.FQMN()]; present {
-			fieldType = newSimpleType(flowType, required)
+			fieldType = newSimpleType(flowType, opts)
 		} else {
-			fieldType = newMessageFlowType(cfg.messageTypeName(ft), required)
+			fieldType = newMessageFlowType(cfg.messageTypeName(ft), opts)
 			if ft.File.GetPackage() != pkg {
 				parts := strings.Split(ft.FQMN(), ".")
 				pn := strings.Join(parts[:len(parts)-1], "")
@@ -155,7 +163,7 @@ func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.
 
 		}
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
-		fieldType = newSimpleType("string", required) // could be more correct
+		fieldType = newSimpleType("string", opts) // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
 		e, err := reg.LookupEnum("", f.GetTypeName())
 		if err != nil {
@@ -169,38 +177,27 @@ func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.
 			}
 		} else {
 			name := cfg.enumTypeName(e)
-			fieldType = newSimpleType(name, required)
+			fieldType = newSimpleType(name, opts)
 		}
 	}
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
-		fieldType = newRepeatedFlowType(fieldType, required)
+		fieldType = newRepeatedFlowType(fieldType, opts)
 	}
-	return &namedType{FlowTyper: fieldType, name: f.GetName(), required: required}, deps, nil
+	return &namedType{FlowTyper: fieldType, name: f.GetName(), opts: opts}, deps, nil
 }
 
-// this is a hack to use the FieldOptions descriptor from golang/proto instead of gogo/proto
-var E_Field = &proto.ExtensionDesc{
-	ExtendedType:  (*pbdescriptor.FieldOptions)(nil),
-	ExtensionType: validator.E_Field.ExtensionType,
-	Field:         validator.E_Field.Field,
-	Name:          validator.E_Field.Name,
-	Tag:           validator.E_Field.Tag,
-	Filename:      validator.E_Field.Filename,
-}
-
-func init() {
-	proto.RegisterType((*validator.FieldValidator)(nil), "validator.FieldValidator")
-	proto.RegisterExtension(E_Field)
-}
-
-func getFieldValidatorIfAny(field *pbdescriptor.FieldDescriptorProto) *validator.FieldValidator {
+func getFieldOptionsIfAny(field *pbdescriptor.FieldDescriptorProto) opts.Options {
 	if field.Options != nil {
-		v, err := proto.GetExtension(field.Options, E_Field)
-		if err == nil && v.(*validator.FieldValidator) != nil {
-			return (v.(*validator.FieldValidator))
+		v, err := proto.GetExtension(field.Options, opts.E_Field)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, fmt.Errorf("issue getting field options: %v", err))
+			return opts.Options{}
+		}
+		if o := v.(*opts.Options); o != nil {
+			return *o
 		}
 	}
-	return nil
+	return opts.Options{}
 }
 
 func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowTyper, Dependencies, error) {
@@ -210,11 +207,21 @@ func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Regi
 		Options: cfg,
 	}
 	for _, f := range m.Fields {
-		required := false
-		if validatorOptions := getFieldValidatorIfAny(f.FieldDescriptorProto); validatorOptions != nil {
-			required = *validatorOptions.MsgExists
+		/*
+			required := false
+			if validatorOptions := getFieldValidatorIfAny(f.FieldDescriptorProto); validatorOptions != nil {
+				required = *validatorOptions.MsgExists
+			}
+		*/
+		opts := cfg.ProtoOptions
+		fieldOpts := getFieldOptionsIfAny(f.FieldDescriptorProto)
+		if fieldOpts.Required != nil {
+			opts.Required = fieldOpts.Required
 		}
-		field, newDeps, err := cfg.fieldToType(m.File.GetPackage(), f, reg, required)
+		if fieldOpts.Nullable != nil {
+			opts.Nullable = fieldOpts.Nullable
+		}
+		field, newDeps, err := cfg.fieldToType(m.File.GetPackage(), f, reg, opts)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -254,7 +261,7 @@ func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) 
 	}
 	name := cfg.enumTypeName(e)
 	return &namedType{
-		FlowTyper: newSimpleType(strings.Join(options, " | "), false),
+		FlowTyper: newSimpleType(strings.Join(options, " | "), cfg.ProtoOptions),
 		name:      name,
 	}, nil, nil
 }
@@ -272,12 +279,23 @@ func mergeDeps(dst, src Dependencies) {
 	}
 }
 
-func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opts Options) (string, error) {
-	if opts.DumpJSON {
+func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, options Options) (string, error) {
+	if options.DumpJSON {
 		m := &jsonpb.Marshaler{EmitDefaults: true, OrigName: true, Indent: "  "}
 		m.Marshal(os.Stderr, file)
 		time.Sleep(time.Second)
 	}
+
+	if file.Options != nil {
+		v, err := proto.GetExtension(file.Options, opts.E_FieldDefaults)
+		if err != nil {
+			return "", err
+		}
+		if o := v.(*opts.Options); o != nil {
+			options.ProtoOptions = *o
+		}
+	}
+
 	deps := Dependencies{}
 	result := []FlowTyper{}
 	f, err := registry.LookupFile(file.GetName())
@@ -285,7 +303,7 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 		return "", err
 	}
 	for _, enum := range f.Enums {
-		t, newDeps, err := opts.enumToFlowType(enum, registry)
+		t, newDeps, err := options.enumToFlowType(enum, registry)
 		if err != nil {
 			return "", err
 		}
@@ -293,7 +311,7 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 		result = append(result, t)
 	}
 	for _, message := range f.Messages {
-		t, newDeps, err := opts.messageToFlowType(message, registry)
+		t, newDeps, err := options.messageToFlowType(message, registry)
 		if err != nil {
 			return "", err
 		}
@@ -307,7 +325,7 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 // Code generated by protoc-gen-flowtypes DO NOT EDIT.
 // InputID: {{.InputID}}
 
-{{ range $package, $types := .Dependencies -}}
+{{- range $package, $types := .Dependencies -}}
 import type {
 {{range $type, $true := $types}}  {{$type}},
 {{end -}}
@@ -325,7 +343,7 @@ import type {
 		Options
 		Dependencies Dependencies
 		Result       []FlowTyper
-	}{Options: opts, Dependencies: deps, Result: result})
+	}{Options: options, Dependencies: deps, Result: result})
 	if err != nil {
 		return "", err
 	}

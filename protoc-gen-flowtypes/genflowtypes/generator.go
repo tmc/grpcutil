@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
 var (
@@ -35,6 +36,7 @@ type Options struct {
 	EmitEnumZeros      bool
 	InputID            string
 	DumpJSON           bool
+	ProtoOptions       opts.Options
 }
 
 func defaultOutputNames(targets []*descriptor.File) []string {
