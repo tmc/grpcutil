@@ -207,12 +207,6 @@ func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Regi
 		Options: cfg,
 	}
 	for _, f := range m.Fields {
-		/*
-			required := false
-			if validatorOptions := getFieldValidatorIfAny(f.FieldDescriptorProto); validatorOptions != nil {
-				required = *validatorOptions.MsgExists
-			}
-		*/
 		opts := cfg.ProtoOptions
 		fieldOpts := getFieldOptionsIfAny(f.FieldDescriptorProto)
 		if fieldOpts.Required != nil {
