@@ -82,7 +82,7 @@ func (t *namedType) Name() string {
 
 type objectFlowType struct {
 	Fields  []NamedFlowTyper
-	Options Options
+	Options GeneratorOptions
 
 	opts opts.Options
 }
@@ -106,7 +106,7 @@ func (t *objectFlowType) FlowType() string {
 func (t *objectFlowType) IsRequired() bool { return t.opts.GetRequired() }
 func (t *objectFlowType) IsNullable() bool { return t.opts.GetNullable() }
 
-func (cfg Options) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, opts opts.Options) (NamedFlowTyper, Dependencies, error) {
+func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, opts opts.Options) (NamedFlowTyper, Dependencies, error) {
 	// FieldMessage
 	var fieldType FlowTyper = newSimpleType("any", opts)
 	// deps will hold the other package name if the field is an external reference.
@@ -200,7 +200,7 @@ func getFieldOptionsIfAny(field *pbdescriptor.FieldDescriptorProto) opts.Options
 	return opts.Options{}
 }
 
-func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowTyper, Dependencies, error) {
+func (cfg GeneratorOptions) messageToFlowType(m *descriptor.Message, reg *descriptor.Registry) (FlowTyper, Dependencies, error) {
 	deps := Dependencies{}
 	t := &objectFlowType{
 		Fields:  []NamedFlowTyper{},
@@ -225,7 +225,7 @@ func (cfg Options) messageToFlowType(m *descriptor.Message, reg *descriptor.Regi
 	return &namedType{FlowTyper: t, name: cfg.messageTypeName(m)}, deps, nil
 }
 
-func (cfg Options) enumTypeName(e *descriptor.Enum) string {
+func (cfg GeneratorOptions) enumTypeName(e *descriptor.Enum) string {
 	name := strings.Replace(e.FQEN(), ".", "", -1)
 	if !cfg.AlwaysQualifyTypes {
 		if strings.HasPrefix(name, e.File.GoPkg.Name) {
@@ -235,7 +235,7 @@ func (cfg Options) enumTypeName(e *descriptor.Enum) string {
 	return name
 }
 
-func (cfg Options) messageTypeName(m *descriptor.Message) string {
+func (cfg GeneratorOptions) messageTypeName(m *descriptor.Message) string {
 	name := strings.Replace(m.FQMN(), ".", "", -1)
 	if !cfg.AlwaysQualifyTypes {
 		if strings.HasPrefix(name, m.File.GoPkg.Name) {
@@ -245,7 +245,7 @@ func (cfg Options) messageTypeName(m *descriptor.Message) string {
 	return name
 }
 
-func (cfg Options) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowTyper, Dependencies, error) {
+func (cfg GeneratorOptions) enumToFlowType(e *descriptor.Enum, reg *descriptor.Registry) (FlowTyper, Dependencies, error) {
 	options := []string{}
 	for _, v := range e.Value {
 		if !cfg.EmitEnumZeros && v.GetNumber() == 0 {
@@ -273,7 +273,7 @@ func mergeDeps(dst, src Dependencies) {
 	}
 }
 
-func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, options Options) (string, error) {
+func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, options GeneratorOptions) (string, error) {
 	if options.DumpJSON {
 		m := &jsonpb.Marshaler{EmitDefaults: true, OrigName: true, Indent: "  "}
 		m.Marshal(os.Stderr, file)
@@ -333,10 +333,10 @@ import type {
 		return "", err
 	}
 	err = tmpl.Execute(buf, struct {
-		Options
+		GeneratorOptions
 		Dependencies Dependencies
 		Result       []FlowTyper
-	}{Options: options, Dependencies: deps, Result: result})
+	}{GeneratorOptions: options, Dependencies: deps, Result: result})
 	if err != nil {
 		return "", err
 	}

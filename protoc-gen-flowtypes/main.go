@@ -97,7 +97,7 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, genflowtypes.Options{
+	out, err := g.Generate(targets, genflowtypes.GeneratorOptions{
 		AlwaysQualifyTypes: *flagAlwaysQualifyTypes,
 		EmbedEnums:         *flagEmbedEnums,
 		OptonalSimpleTypes: *flagOptionalSimpleTypes,
