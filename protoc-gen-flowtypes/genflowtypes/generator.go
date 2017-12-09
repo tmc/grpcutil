@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
 var (
@@ -26,8 +27,8 @@ func New(reg *descriptor.Registry) *Generator {
 	return &Generator{reg: reg}
 }
 
-// Options describes output parameters
-type Options struct {
+// GeneratorOptions describes output parameters
+type GeneratorOptions struct {
 	AlwaysQualifyTypes bool
 	EmbedEnums         bool
 	OptonalSimpleTypes bool
@@ -35,6 +36,7 @@ type Options struct {
 	EmitEnumZeros      bool
 	InputID            string
 	DumpJSON           bool
+	ProtoOptions       opts.Options
 }
 
 func defaultOutputNames(targets []*descriptor.File) []string {
@@ -49,7 +51,7 @@ func defaultOutputNames(targets []*descriptor.File) []string {
 }
 
 // Generate processes the given proto files and produces flowtype output.
-func (g *Generator) Generate(targets []*descriptor.File, opts Options) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *Generator) Generate(targets []*descriptor.File, opts GeneratorOptions) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	outputNames := defaultOutputNames(targets)
 	if opts.FilenameOverride != "" {

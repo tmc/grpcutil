@@ -23,6 +23,7 @@ var (
 	flagFilenameOverride    = flag.String("output", "", "output filename override")
 	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "marks default optionality for 'simple' field values")
 	flagEmitEnumZeros       = flag.Bool("enum_zeros", false, "emit enum names of value zero")
+	flagDumpJSON            = flag.Bool("dump_json", false, "dump json representation of request to stderr")
 	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
@@ -96,12 +97,13 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, genflowtypes.Options{
+	out, err := g.Generate(targets, genflowtypes.GeneratorOptions{
 		AlwaysQualifyTypes: *flagAlwaysQualifyTypes,
 		EmbedEnums:         *flagEmbedEnums,
 		OptonalSimpleTypes: *flagOptionalSimpleTypes,
 		FilenameOverride:   *flagFilenameOverride,
 		EmitEnumZeros:      *flagEmitEnumZeros,
+		DumpJSON:           *flagDumpJSON,
 		InputID:            inputSha,
 	})
 

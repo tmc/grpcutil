@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+import "google/protobuf/descriptor.proto";
+package opts;
+
+extend google.protobuf.FileOptions {
+  optional Options field_defaults = 1035;
+}
+
+extend google.protobuf.FieldOptions {
+  optional Options field = 1035;
+}
+
+message Options {
+  optional bool required = 1;
+  optional bool nullable = 2;
+}
