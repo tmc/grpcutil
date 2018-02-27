@@ -9,12 +9,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gabriel/grpcutil/protoc-gen-flowtypes/genflowtypes"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
-	"github.com/tmc/grpcutil/protoc-gen-flowtypes/genflowtypes"
-	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
 var (
@@ -25,7 +24,6 @@ var (
 	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "marks default optionality for 'simple' field values")
 	flagEmitEnumZeros       = flag.Bool("enum_zeros", false, "emit enum names of value zero")
 	flagDumpJSON            = flag.Bool("dump_json", false, "dump json representation of request to stderr")
-	flagNullable            = flag.Bool("nullable", false, "all fields default to nullable")
 	file                    = flag.String("file", "stdin", "where to load data from")
 )
 
@@ -107,9 +105,6 @@ func main() {
 		EmitEnumZeros:      *flagEmitEnumZeros,
 		DumpJSON:           *flagDumpJSON,
 		InputID:            inputSha,
-		ProtoOptions: opts.Options{
-			Nullable: flagNullable,
-		},
 	})
 
 	glog.V(1).Info("Processed code generator request")
