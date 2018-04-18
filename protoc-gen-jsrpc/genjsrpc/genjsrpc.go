@@ -27,12 +27,13 @@ func (cfg GeneratorOptions) methodToRPC(name string, m *descriptor.Method) (stri
 	s := `export const ` + methodName + ` = (req: ` + inputType + `) => (dispatch: (action: any) => void) => {
   dispatch({
     type: '` + actionName + `_REQUEST',
+		payload: req,
   })
   client().` + methodName + `(req, (error: ?Error, response: ?` + outputType + `) => {
     if (error) {
       dispatch({
         type: 'ERROR',
-        payload: {error, action: '` + actionName + `'},
+        payload: {error, action: '` + actionName + `', req},
       })
       return
     }
@@ -90,7 +91,7 @@ import type {{"{"}}{{.FlowTypes}}{{"}"}} from './types'
 		GeneratorOptions
 		FlowTypes string
 		Result    string
-	}{GeneratorOptions: options, FlowTypes: strings.Join(types, ","), Result: strings.Join(result, "\n\n")})
+	}{GeneratorOptions: options, FlowTypes: strings.Join(types, ", "), Result: strings.Join(result, "\n\n")})
 	if err != nil {
 		return "", err
 	}
