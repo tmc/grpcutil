@@ -4,7 +4,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 // optional to specify optional fields and nullable values.
-import "github.com/tmc/grpcutil/protoc-gen-flowtypes/opts/opts.proto";
+import "github.com/gabriel/grpcutil/protoc-gen-flowtypes/opts/opts.proto";
 
 message SearchRequest {
   string query = 1;

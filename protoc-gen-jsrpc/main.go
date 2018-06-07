@@ -9,23 +9,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gabriel/grpcutil/protoc-gen-flowtypes/genflowtypes"
+	"github.com/gabriel/grpcutil/protoc-gen-jsrpc/genjsrpc"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 )
 
-var (
-	importPrefix            = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
-	flagAlwaysQualifyTypes  = flag.Bool("always_qualify_type_names", false, "prefixes package names to all types if true")
-	flagEmbedEnums          = flag.Bool("embed_enums", false, "embeds instead of creating references to enum types")
-	flagFilenameOverride    = flag.String("output", "", "output filename override")
-	flagOptionalSimpleTypes = flag.Bool("optional_simples", false, "marks default optionality for 'simple' field values")
-	flagEmitEnumZeros       = flag.Bool("enum_zeros", false, "emit enum names of value zero")
-	flagDumpJSON            = flag.Bool("dump_json", false, "dump json representation of request to stderr")
-	file                    = flag.String("file", "stdin", "where to load data from")
-)
+var ()
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, string, error) {
 	glog.V(1).Info("Parsing code generator request")
@@ -53,9 +44,6 @@ func main() {
 
 	glog.V(1).Info("Processing code generator request")
 	f := os.Stdin
-	if *file != "stdin" {
-		f, _ = os.Open("input.txt")
-	}
 	req, inputSha, err := parseReq(f)
 	if err != nil {
 		glog.Fatal(err)
@@ -80,9 +68,9 @@ func main() {
 		}
 	}
 
-	g := genflowtypes.New(reg)
+	g := genjsrpc.New(reg)
 
-	reg.SetPrefix(*importPrefix)
+	// reg.SetPrefix(*importPrefix)
 	if err := reg.Load(req); err != nil {
 		emitError(err)
 		return
@@ -97,14 +85,8 @@ func main() {
 		targets = append(targets, f)
 	}
 
-	out, err := g.Generate(targets, genflowtypes.GeneratorOptions{
-		AlwaysQualifyTypes: *flagAlwaysQualifyTypes,
-		EmbedEnums:         *flagEmbedEnums,
-		OptonalSimpleTypes: *flagOptionalSimpleTypes,
-		FilenameOverride:   *flagFilenameOverride,
-		EmitEnumZeros:      *flagEmitEnumZeros,
-		DumpJSON:           *flagDumpJSON,
-		InputID:            inputSha,
+	out, err := g.Generate(targets, genjsrpc.GeneratorOptions{
+		InputID: inputSha,
 	})
 
 	glog.V(1).Info("Processed code generator request")

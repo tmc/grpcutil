@@ -8,11 +8,12 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/gabriel/grpcutil/protoc-gen-flowtypes/opts"
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
-	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
 // Dependencies maps packages names to imported type names.
@@ -98,7 +99,9 @@ func (t *objectFlowType) FlowType() string {
 		if !f.IsNullable() {
 			nullableIndicator = ""
 		}
-		fields = append(fields, fmt.Sprintf("  %s%s: %s%s", f.Name(), optionalIndicator, nullableIndicator, f.FlowType()))
+		field := fmt.Sprintf("  %s%s: %s%s", f.Name(), optionalIndicator, nullableIndicator, f.FlowType())
+		glog.V(1).Infof("Field: %s", field)
+		fields = append(fields, field)
 	}
 	return fmt.Sprintf("{\n%s\n}", strings.Join(fields, ",\n"))
 }
@@ -106,9 +109,19 @@ func (t *objectFlowType) FlowType() string {
 func (t *objectFlowType) IsRequired() bool { return t.opts.GetRequired() }
 func (t *objectFlowType) IsNullable() bool { return t.opts.GetNullable() }
 
-func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, opts opts.Options) (NamedFlowTyper, Dependencies, error) {
+func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *descriptor.Registry, defOpts opts.Options) (NamedFlowTyper, Dependencies, error) {
+
+	primitiveOpts := opts.Options{
+		Required: &[]bool{true}[0],
+		Nullable: &[]bool{false}[0],
+	}
+	messageOpts := opts.Options{
+		Required: &[]bool{true}[0],
+		Nullable: &[]bool{true}[0],
+	}
+
 	// FieldMessage
-	var fieldType FlowTyper = newSimpleType("any", opts)
+	var fieldType FlowTyper = newSimpleType("any", defOpts)
 	// deps will hold the other package name if the field is an external reference.
 	deps := Dependencies{}
 	switch f.GetType() {
@@ -135,13 +148,13 @@ func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *de
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT32:
 		fallthrough
 	case pbdescriptor.FieldDescriptorProto_TYPE_SINT64:
-		fieldType = newSimpleType("number", opts)
+		fieldType = newSimpleType("number", primitiveOpts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_BOOL:
-		fieldType = newSimpleType("boolean", opts)
+		fieldType = newSimpleType("boolean", primitiveOpts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_STRING:
-		fieldType = newSimpleType("string", opts)
+		fieldType = newSimpleType("string", primitiveOpts)
 	case pbdescriptor.FieldDescriptorProto_TYPE_GROUP:
-		fieldType = newSimpleType("any", opts) // , required?
+		fieldType = newSimpleType("any", defOpts) // , required?
 	case pbdescriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		// TODO: should resolve type name relative to this type
 		ft, err := reg.LookupMsg("", f.GetTypeName())
@@ -149,9 +162,9 @@ func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *de
 			return nil, nil, err
 		}
 		if flowType, present := knownTypeMap[ft.FQMN()]; present {
-			fieldType = newSimpleType(flowType, opts)
+			fieldType = newSimpleType(flowType, messageOpts)
 		} else {
-			fieldType = newMessageFlowType(cfg.messageTypeName(ft), opts)
+			fieldType = newMessageFlowType(cfg.messageTypeName(ft), messageOpts)
 			if ft.File.GetPackage() != pkg {
 				parts := strings.Split(ft.FQMN(), ".")
 				pn := strings.Join(parts[:len(parts)-1], "")
@@ -163,7 +176,7 @@ func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *de
 
 		}
 	case pbdescriptor.FieldDescriptorProto_TYPE_BYTES:
-		fieldType = newSimpleType("string", opts) // could be more correct
+		fieldType = newSimpleType("string", defOpts) // could be more correct
 	case pbdescriptor.FieldDescriptorProto_TYPE_ENUM:
 		e, err := reg.LookupEnum("", f.GetTypeName())
 		if err != nil {
@@ -177,13 +190,13 @@ func (cfg GeneratorOptions) fieldToType(pkg string, f *descriptor.Field, reg *de
 			}
 		} else {
 			name := cfg.enumTypeName(e)
-			fieldType = newSimpleType(name, opts)
+			fieldType = newSimpleType(name, defOpts)
 		}
 	}
 	if f.GetLabel() == pbdescriptor.FieldDescriptorProto_LABEL_REPEATED {
-		fieldType = newRepeatedFlowType(fieldType, opts)
+		fieldType = newRepeatedFlowType(fieldType, defOpts)
 	}
-	return &namedType{FlowTyper: fieldType, name: f.GetName(), opts: opts}, deps, nil
+	return &namedType{FlowTyper: fieldType, name: f.GetName(), opts: defOpts}, deps, nil
 }
 
 func getFieldOptionsIfAny(field *pbdescriptor.FieldDescriptorProto) opts.Options {

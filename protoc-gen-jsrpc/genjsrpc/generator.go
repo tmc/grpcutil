@@ -1,4 +1,4 @@
-package genflowtypes
+package genjsrpc
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gabriel/grpcutil/protoc-gen-flowtypes/opts"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
@@ -29,14 +28,7 @@ func New(reg *descriptor.Registry) *Generator {
 
 // GeneratorOptions describes output parameters
 type GeneratorOptions struct {
-	AlwaysQualifyTypes bool
-	EmbedEnums         bool
-	OptonalSimpleTypes bool
-	FilenameOverride   string
-	EmitEnumZeros      bool
-	InputID            string
-	DumpJSON           bool
-	ProtoOptions       opts.Options
+	InputID string
 }
 
 func defaultOutputNames(targets []*descriptor.File) []string {
@@ -54,12 +46,9 @@ func defaultOutputNames(targets []*descriptor.File) []string {
 func (g *Generator) Generate(targets []*descriptor.File, opts GeneratorOptions) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	outputNames := defaultOutputNames(targets)
-	if opts.FilenameOverride != "" {
-		outputNames = strings.Split(opts.FilenameOverride, "+")
-	}
 	for i, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
-		code, err := generateFlowTypes(file, g.reg, opts)
+		code, err := generateJSRPC(file, g.reg, opts)
 		if err == errNoTargetService {
 			glog.V(1).Infof("%s: %v", file.GetName(), err)
 			continue
