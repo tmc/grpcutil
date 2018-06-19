@@ -1,4 +1,4 @@
 protoc-gen-ts
 -------------
 
-http://godoc.org/tmc/grpcutil/protoc-gen-ts
+https://godoc.org/github.com/tmc/grpcutil/protoc-gen-tstypes
