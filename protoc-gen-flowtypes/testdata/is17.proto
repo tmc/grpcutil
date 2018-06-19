@@ -1,0 +1,9 @@
+syntax="proto3";
+option java_package = "xxx.generated";
+option java_multiple_files = true;
+
+// For optional types
+import "scalapb.proto";
+option (scalapb.options) = {
+  primitive_wrappers: true
+};
