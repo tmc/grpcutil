@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/pkg/errors"
 	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
@@ -282,11 +283,14 @@ func generateFlowTypes(file *descriptor.File, registry *descriptor.Registry, opt
 
 	if file.Options != nil {
 		v, err := proto.GetExtension(file.Options, opts.E_FieldDefaults)
-		if err != nil {
-			return "", err
-		}
-		if o := v.(*opts.Options); o != nil {
-			options.ProtoOptions = *o
+		if err == nil {
+			if o := v.(*opts.Options); o != nil {
+				options.ProtoOptions = *o
+			}
+		} else {
+			if err != proto.ErrMissingExtension {
+				return "", errors.Wrap(err, "GetExtenstion")
+			}
 		}
 	}
 

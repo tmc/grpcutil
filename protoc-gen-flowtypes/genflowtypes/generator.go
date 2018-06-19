@@ -1,7 +1,6 @@
 package genflowtypes
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/pkg/errors"
 	"github.com/tmc/grpcutil/protoc-gen-flowtypes/opts"
 )
 
@@ -65,7 +65,7 @@ func (g *Generator) Generate(targets []*descriptor.File, opts GeneratorOptions) 
 			continue
 		}
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "generateFlowTypes")
 		}
 
 		files = append(files, &plugin.CodeGeneratorResponse_File{
