@@ -2,40 +2,39 @@
 
 declare namespace google.protobuf {
 
-interface Timestamp {
-    seconds?: number;
-    nanos?: number;
-}
+  interface Timestamp {
+      seconds?: number;
+      nanos?: number;
+  }
 
 }
 
 declare namespace simple {
 
-enum Corpus {
-    UNIVERSAL = 0,
-    WEB = 1,
-    IMAGES = 2,
-    LOCAL = 3,
-    NEWS = 4,
-    PRODUCTS = 5,
-    VIDEO = 6,
-}
+  enum Corpus {
+      UNIVERSAL = 0,
+      WEB = 1,
+      IMAGES = 2,
+      LOCAL = 3,
+      NEWS = 4,
+      PRODUCTS = 5,
+      VIDEO = 6,
+  }
+  interface SearchRequest {
+      query?: string;
+      page_number?: number;
+      result_per_page?: number;
+      corpus?: Corpus;
+      sent_at?: google.protobuf.Timestamp;
+      xyz?: { [key: string]: number };
+      zytes?: Uint8Array;
+  }
 
-interface SearchRequest {
-    query?: string;
-    page_number?: number;
-    result_per_page?: number;
-    corpus?: Corpus;
-    sent_at?: google.protobuf.Timestamp;
-    xyz?: { [key: string]: number };
-    zytes?: Uint8Array;
-}
-
-interface SearchResponse {
-    results?: Array<string>;
-    num_results?: number;
-    original_request?: SearchRequest;
-}
+  interface SearchResponse {
+      results?: Array<string>;
+      num_results?: number;
+      original_request?: SearchRequest;
+  }
 
 }
 
