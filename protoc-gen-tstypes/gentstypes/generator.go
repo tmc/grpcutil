@@ -3,6 +3,7 @@ package gentstypes
 // TODO: eliminate stderr debug printing
 // TODO: add services support
 // TODO: add nested messages support
+// TODO: add nested enum support
 // TODO: add better output filename
 
 import (
@@ -103,12 +104,13 @@ func (g *Generator) generateServices(f []*desc.ServiceDescriptor) {
 }
 
 func (g *Generator) generateMessage(m *desc.MessageDescriptor) {
+	// TODO: namespace messages?
 	for _, e := range m.GetNestedEnumTypes() {
 		g.generateEnum(e)
 	}
 	g.W(fmt.Sprintf("interface %s {", m.GetName()))
 	for _, f := range m.GetFields() {
-		g.W(fmt.Sprintf("    %s?: %s;", f.GetName(), fieldType(f)))
+		g.W(fmt.Sprintf(indent+"%s?: %s;", f.GetName(), fieldType(f)))
 	}
 	g.W("}\n")
 }
