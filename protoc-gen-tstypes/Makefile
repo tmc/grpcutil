@@ -7,8 +7,6 @@ build:
 test:
 	go test ./...
 
-example:
-	protoc -I. -I$(GOPATH)/src --tstypes_out=. testdata/example1.proto
 
 examples:
 	bash examples.sh
