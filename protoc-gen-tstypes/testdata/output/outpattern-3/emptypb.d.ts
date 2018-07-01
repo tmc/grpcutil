@@ -2,8 +2,8 @@
 
 declare namespace google.protobuf {
 
-  export interface Empty {
-  }
+    export interface Empty {
+    }
 
 }
 

@@ -9,4 +9,5 @@
 //  - outpattern: control the output file paths.
 //  - int_enums: use ints instead of strings for enums (default false)
 //  - declare_namespace: declare namespace for the generated type (default true)
+//  - async_iterators: use async iterators for streaming endpoint types (default false)
 package main

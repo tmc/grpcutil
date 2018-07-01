@@ -15,6 +15,7 @@ import (
 var (
 	flagVerbose               = flag.Int("v", 0, "verbosity level")
 	flagDeclareNamespace      = flag.Bool("declare_namespace", true, "if true, generate a namespace declaration")
+	flagAsyncIterators        = flag.Bool("async_iterators", false, "if true, user async iterators")
 	flagEnumsAsInts           = flag.Bool("int_enums", false, "if true, generate numeric enums")
 	flagOutputFilenamePattern = flag.String("outpattern", "{{.Dir}}/{{.Descriptor.GetPackage | default \"none\"}}.{{.BaseName}}.d.ts", "output filename pattern")
 	flagDumpDescriptor        = flag.Bool("dump_request_descriptor", false, "if true, dump request descriptor")
@@ -34,6 +35,7 @@ func main() {
 	}
 	parseFlags(g.Request.Parameter)
 	g.GenerateAllFiles(&gentstypes.Parameters{
+		AsyncIterators:        *flagAsyncIterators,
 		DeclareNamespace:      *flagDeclareNamespace,
 		Verbose:               *flagVerbose,
 		OutputNamePattern:     *flagOutputFilenamePattern,

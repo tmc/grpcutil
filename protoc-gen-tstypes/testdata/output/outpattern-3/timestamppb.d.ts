@@ -2,10 +2,10 @@
 
 declare namespace google.protobuf {
 
-  export interface Timestamp {
-    seconds?: number;
-    nanos?: number;
-  }
+    export interface Timestamp {
+        seconds?: number;
+        nanos?: number;
+    }
 
 }
 
