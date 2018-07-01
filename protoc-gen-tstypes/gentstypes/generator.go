@@ -1,21 +1,20 @@
 package gentstypes
 
-// TODO: eliminate stderr debug printing
 // TODO: add services support
 // TODO: add nested messages support
 // TODO: add nested enum support
-// TODO: add better output filename
 
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/alecthomas/template"
+	"github.com/Masterminds/sprig"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -93,7 +92,7 @@ func genName(r *plugin.CodeGeneratorRequest, f *desc.FileDescriptor, outPattern 
 		Descriptor: f,
 		Request:    r,
 	}
-	var t = template.Must(template.New("gentstypes/generator.go:genName").Parse(outPattern))
+	var t = template.Must(template.New("gentstypes/generator.go:genName").Funcs(sprig.FuncMap()).Parse(outPattern))
 	buf := new(bytes.Buffer)
 	if err := t.Execute(buf, ctx); err != nil {
 		log.Fatalln("issue rendering template:", err)

@@ -16,7 +16,7 @@ var (
 	flagVerbose               = flag.Int("v", 0, "verbosity level")
 	flagDeclareNamespace      = flag.Bool("declare_namespace", true, "if true, generate a namespace declaration")
 	flagEnumsAsInts           = flag.Bool("int_enums", false, "if true, generate numeric enums")
-	flagOutputFilenamePattern = flag.String("outpattern", "{{.Dir}}/{{.BaseName}}pb.d.ts", "output filename pattern")
+	flagOutputFilenamePattern = flag.String("outpattern", "{{.Dir}}/{{.Descriptor.GetPackage | default \"none\"}}.{{.BaseName}}.d.ts", "output filename pattern")
 	flagDumpDescriptor        = flag.Bool("dump_request_descriptor", false, "if true, dump request descriptor")
 )
 
