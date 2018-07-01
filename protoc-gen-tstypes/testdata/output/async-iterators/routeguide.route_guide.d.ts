@@ -2,38 +2,38 @@
 
 declare namespace routeguide {
 
-    export interface Point {
-        latitude?: number;
-        longitude?: number;
-    }
+  export interface Point {
+    latitude?: number;
+    longitude?: number;
+  }
 
-    export interface Rectangle {
-        lo?: Point;
-        hi?: Point;
-    }
+  export interface Rectangle {
+    lo?: Point;
+    hi?: Point;
+  }
 
-    export interface Feature {
-        name?: string;
-        location?: Point;
-    }
+  export interface Feature {
+    name?: string;
+    location?: Point;
+  }
 
-    export interface RouteNote {
-        location?: Point;
-        message?: string;
-    }
+  export interface RouteNote {
+    location?: Point;
+    message?: string;
+  }
 
-    export interface RouteSummary {
-        point_count?: number;
-        feature_count?: number;
-        distance?: number;
-        elapsed_time?: number;
-    }
+  export interface RouteSummary {
+    point_count?: number;
+    feature_count?: number;
+    distance?: number;
+    elapsed_time?: number;
+  }
 
-    export interface RouteGuideService {
-        GetFeature: (r:Point) => Feature;
-        ListFeatures: (r:Rectangle) => AsyncIterator<Feature>;
-        RecordRoute: (r:AsyncIterator<Point>) => RouteSummary;
-        RouteChat: (r:AsyncIterator<RouteNote>) => AsyncIterator<RouteNote>;
-    }
+  export interface RouteGuideService {
+    GetFeature: (r:Point) => Feature;
+    ListFeatures: (r:Rectangle) => AsyncIterator<Feature>;
+    RecordRoute: (r:AsyncIterator<Point>) => RouteSummary;
+    RouteChat: (r:AsyncIterator<RouteNote>) => AsyncIterator<RouteNote>;
+  }
 }
 

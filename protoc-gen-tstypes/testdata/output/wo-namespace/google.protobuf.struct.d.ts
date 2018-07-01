@@ -4,19 +4,19 @@ export enum NullValue {
     NULL_VALUE = "NULL_VALUE",
 }
 export interface Struct {
-    fields?: { [key: string]: Value };
+  fields?: { [key: string]: Value };
 }
 
 export interface Value {
-    null_value?: NullValue;
-    number_value?: number;
-    string_value?: string;
-    bool_value?: boolean;
-    struct_value?: Struct;
-    list_value?: ListValue;
+  null_value?: NullValue;
+  number_value?: number;
+  string_value?: string;
+  bool_value?: boolean;
+  struct_value?: Struct;
+  list_value?: ListValue;
 }
 
 export interface ListValue {
-    values?: Array<Value>;
+  values?: Array<Value>;
 }
 

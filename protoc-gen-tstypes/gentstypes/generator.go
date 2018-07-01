@@ -120,12 +120,13 @@ func (g *Generator) GenerateAllFiles(params *Parameters) {
 	sort.Strings(names)
 	for _, n := range names {
 		f := files[n]
-		if params.DeclareNamespace {
+		ns := params.DeclareNamespace && f.GetPackage() != ""
+		if ns {
 			g.W(fmt.Sprintf("declare namespace %s {\n", f.GetPackage()))
 			g.incIndent()
 		}
 		g.generate(f, params)
-		if params.DeclareNamespace {
+		if ns {
 			g.decIndent()
 			g.W("}\n")
 		}
