@@ -1,5 +1,12 @@
 // Program protoc-gen-tstypes generates TypeScript type definition files from a Protocol Buffer file.
 //
-// Example:
+// Basic Example:
 // protoc -I. --tstypes_out=. simple.proto
+//
+// See examples.sh for more complex examples (output is in testdata/output)
+//
+// Parameters:
+//  - outpattern: control the output file paths.
+//  - int_enums: use ints instead of strings for enums (default false)
+//  - declare_namespace: declare namespace for the generated type (default true)
 package main
