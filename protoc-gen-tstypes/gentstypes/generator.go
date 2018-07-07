@@ -21,7 +21,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 )
 
-const indent = "  "
+const indent = "    "
 
 type Parameters struct {
 	AsyncIterators        bool
@@ -120,33 +120,35 @@ func (g *Generator) GenerateAllFiles(params *Parameters) {
 	sort.Strings(names)
 	for _, n := range names {
 		f := files[n]
-		ns := params.DeclareNamespace && f.GetPackage() != ""
-		if ns {
-			g.W(fmt.Sprintf("declare namespace %s {\n", f.GetPackage()))
-			g.incIndent()
-		}
 		g.generate(f, params)
-		if ns {
-			g.decIndent()
-			g.W("}\n")
-		}
-		n := genName(g.Request, f, params.OutputNamePattern)
-		if params.Verbose > 0 {
-			fmt.Fprintln(os.Stderr, "generating", n)
-		}
-		g.Response.File = append(g.Response.File, &plugin.CodeGeneratorResponse_File{
-			Name:    proto.String(n),
-			Content: proto.String(g.String()),
-		})
-		g.Buffer.Reset()
 	}
 }
 
 func (g *Generator) generate(f *desc.FileDescriptor, params *Parameters) {
 	// TODO: consider best order
+	ns := params.DeclareNamespace && f.GetPackage() != ""
+	if ns {
+		g.W(fmt.Sprintf("declare namespace %s {\n", f.GetPackage()))
+		g.incIndent()
+	}
+
 	g.generateEnums(f.GetEnumTypes(), params)
 	g.generateMessages(f.GetMessageTypes(), params)
 	g.generateServices(f.GetServices(), params)
+
+	if ns {
+		g.decIndent()
+		g.W("}\n")
+	}
+	n := genName(g.Request, f, params.OutputNamePattern)
+	if params.Verbose > 0 {
+		fmt.Fprintln(os.Stderr, "generating", n)
+	}
+	g.Response.File = append(g.Response.File, &plugin.CodeGeneratorResponse_File{
+		Name:    proto.String(n),
+		Content: proto.String(g.String()),
+	})
+	g.Buffer.Reset()
 }
 
 func (g *Generator) generateMessages(messages []*desc.MessageDescriptor, params *Parameters) {

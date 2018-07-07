@@ -19,7 +19,7 @@ done
 if [ "${CHECK:-}" != "" ]; then
     for d in ${ds[*]}; do
         set +e
-        tsc --strict --pretty ${d}/*ts
+        tsc --lib es2015,esnext.asynciterable --strict --pretty ${d}/*ts
         set -e
     done
 fi

@@ -2,10 +2,10 @@
 
 declare namespace google.protobuf {
 
-  export interface Any {
-    type_url?: string;
-    value?: Uint8Array;
-  }
+    export interface Any {
+        type_url?: string;
+        value?: Uint8Array;
+    }
 
 }
 
