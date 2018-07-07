@@ -2,9 +2,9 @@
 
 declare namespace google.protobuf {
 
-    export interface Any {
-        typeUrl?: string;
-        value?: Uint8Array;
+    export interface Duration {
+        seconds?: number;
+        nanos?: number;
     }
 
 }

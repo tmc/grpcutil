@@ -3,13 +3,13 @@
 declare namespace grpc.testing {
 
     export interface Request {
-        fill_username?: boolean;
-        fill_oauth_scope?: boolean;
+        fillUsername?: boolean;
+        fillOauthScope?: boolean;
     }
 
     export interface Response {
         username?: string;
-        oauth_scope?: string;
+        oauthScope?: string;
     }
 
     export interface TestServiceService {

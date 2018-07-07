@@ -1,4 +1,6 @@
 protoc-gen-tstypes
 ------------------
 
+protoc-gen-tstypes generates Typescript declaration files from protobuf files.
+
 https://godoc.org/github.com/tmc/grpcutil/protoc-gen-tstypes

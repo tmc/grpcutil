@@ -3,28 +3,28 @@
 declare namespace simple {
 
     export enum Corpus {
-        UNIVERSAL = "UNIVERSAL",
-        WEB = "WEB",
-        IMAGES = "IMAGES",
-        LOCAL = "LOCAL",
-        NEWS = "NEWS",
-        PRODUCTS = "PRODUCTS",
-        VIDEO = "VIDEO",
+        UNIVERSAL = 0,
+        WEB = 1,
+        IMAGES = 2,
+        LOCAL = 3,
+        NEWS = 4,
+        PRODUCTS = 5,
+        VIDEO = 6,
     }
     export interface SearchRequest {
         query?: string;
-        page_number?: number;
-        result_per_page?: number;
+        pageNumber?: number;
+        resultPerPage?: number;
         corpus?: Corpus;
-        sent_at?: google.protobuf.Timestamp;
+        sentAt?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
         zytes?: Uint8Array;
     }
 
     export interface SearchResponse {
         results?: Array<string>;
-        num_results?: number;
-        original_request?: SearchRequest;
+        numResults?: number;
+        originalRequest?: SearchRequest;
     }
 
 }

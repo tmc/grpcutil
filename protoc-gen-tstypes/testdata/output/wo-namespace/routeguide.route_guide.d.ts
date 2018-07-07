@@ -21,10 +21,10 @@ export interface RouteNote {
 }
 
 export interface RouteSummary {
-    point_count?: number;
-    feature_count?: number;
+    pointCount?: number;
+    featureCount?: number;
     distance?: number;
-    elapsed_time?: number;
+    elapsedTime?: number;
 }
 
 export interface RouteGuideService {

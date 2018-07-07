@@ -8,12 +8,12 @@ export interface Struct {
 }
 
 export interface Value {
-    null_value?: NullValue;
-    number_value?: number;
-    string_value?: string;
-    bool_value?: boolean;
-    struct_value?: Struct;
-    list_value?: ListValue;
+    nullValue?: NullValue;
+    numberValue?: number;
+    stringValue?: string;
+    boolValue?: boolean;
+    structValue?: Struct;
+    listValue?: ListValue;
 }
 
 export interface ListValue {

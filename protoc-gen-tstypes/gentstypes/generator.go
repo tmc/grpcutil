@@ -29,6 +29,7 @@ type Parameters struct {
 	OutputNamePattern     string
 	DumpRequestDescriptor bool
 	EnumsAsInt            bool
+	OriginalNames         bool
 	Verbose               int
 	// TODO: allow template specification?
 }
@@ -174,7 +175,11 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 	}
 	g.W(fmt.Sprintf("export interface %s {", m.GetName()))
 	for _, f := range m.GetFields() {
-		g.W(fmt.Sprintf(indent+"%s?: %s;", f.GetName(), fieldType(f)))
+		name := f.GetName()
+		if !params.OriginalNames {
+			name = f.GetJSONName()
+		}
+		g.W(fmt.Sprintf(indent+"%s?: %s;", name, fieldType(f)))
 	}
 	g.W("}\n")
 }
