@@ -20,6 +20,6 @@ message Location {
     SOUTH_AMERICA = 7;
   }
 
-  Continent countinent = 1;
+  Continent continent = 1;
   Country country = 2;
 }

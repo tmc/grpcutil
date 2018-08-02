@@ -19,7 +19,7 @@ declare namespace nested {
     }
 
     export interface Location {
-        countinent?: Continent;
+        continent?: Continent;
         country?: Country;
     }
 
