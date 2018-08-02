@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package nested;
+
+message Location {
+  message Country {
+    string name = 1;
+    string alpha2_code = 2;
+    int32 numeric_code = 3;
+  }
+
+  enum Continent {
+    UNIVERSAL = 0;
+    AFRICA = 1;
+    ANTARCTICA = 2;
+    ASIA = 3;
+    AUSTRALIA_OCEANIA = 4;
+    EUROPE = 5;
+    NORTH_AMERICA = 6;
+    SOUTH_AMERICA = 7;
+  }
+
+  Continent countinent = 1;
+  Country country = 2;
+}
