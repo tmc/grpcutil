@@ -198,29 +198,29 @@ func fieldType(f *desc.FieldDescriptor) string {
 func rawFieldType(f *desc.FieldDescriptor) string {
 	switch f.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_INT64:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_UINT64:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_INT32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_FIXED64:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_FIXED32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_UINT32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SINT32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SINT64:
 		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_INT64:
+		return "string"
+	case descriptor.FieldDescriptorProto_TYPE_UINT64:
+		return "string"
+	case descriptor.FieldDescriptorProto_TYPE_INT32:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		return "string"
+	case descriptor.FieldDescriptorProto_TYPE_FIXED32:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_UINT32:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
+		return "string"
+	case descriptor.FieldDescriptorProto_TYPE_SINT32:
+		return "number"
+	case descriptor.FieldDescriptorProto_TYPE_SINT64:
+		return "string"
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
 		return "boolean"
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
