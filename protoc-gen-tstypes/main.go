@@ -21,6 +21,7 @@ var (
 	flagOriginalNames         = flag.Bool("original_names", false, "if true, use original proto file field names, otherwise convert to lowerCamelCase")
 	flagOutputFilenamePattern = flag.String("outpattern", "{{.Dir}}/{{.Descriptor.GetPackage | default \"none\"}}.{{.BaseName}}.d.ts", "output filename pattern")
 	flagDumpDescriptor        = flag.Bool("dump_request_descriptor", false, "if true, dump request descriptor")
+	flagInt64AsString         = flag.Bool("int64_string", false, "if true, generate string int64")
 )
 
 func main() {
@@ -48,6 +49,7 @@ func main() {
 		EnumsAsInt:            *flagEnumsAsInts,
 		OriginalNames:         *flagOriginalNames,
 		DumpRequestDescriptor: *flagDumpDescriptor,
+		Int64AsString:         *flagInt64AsString,
 	})
 	data, err = proto.Marshal(g.Response)
 	if err != nil {
