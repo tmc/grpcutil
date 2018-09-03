@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/btcsuite/golangcrypto/ssh/terminal"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/tmc/grpcutil/protoc-gen-tstypes/gentstypes"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
