@@ -9,11 +9,11 @@ export interface FloatValue {
 }
 
 export interface Int64Value {
-    value?: number;
+    value?: string;
 }
 
 export interface UInt64Value {
-    value?: number;
+    value?: string;
 }
 
 export interface Int32Value {
