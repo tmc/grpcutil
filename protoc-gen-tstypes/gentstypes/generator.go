@@ -174,6 +174,11 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 	for _, e := range m.GetNestedEnumTypes() {
 		g.generateEnum(e, params)
 	}
+	
+	for _, e := range m.GetNestedMessageTypes() {
+		g.generateMessage(e, params)
+	}
+	
 	g.W(fmt.Sprintf("export interface %s {", m.GetName()))
 	for _, f := range m.GetFields() {
 		name := f.GetName()
