@@ -31,6 +31,7 @@ type Parameters struct {
 	EnumsAsInt            bool
 	OriginalNames         bool
 	Verbose               int
+	Int64AsString         bool
 	// TODO: allow template specification?
 }
 
@@ -179,15 +180,15 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 		if !params.OriginalNames {
 			name = f.GetJSONName()
 		}
-		g.W(fmt.Sprintf(indent+"%s?: %s;", name, fieldType(f)))
+		g.W(fmt.Sprintf(indent+"%s?: %s;", name, fieldType(f, params)))
 	}
 	g.W("}\n")
 }
 
-func fieldType(f *desc.FieldDescriptor) string {
-	t := rawFieldType(f)
+func fieldType(f *desc.FieldDescriptor, params *Parameters) string {
+	t := rawFieldType(f, params)
 	if f.IsMap() {
-		return fmt.Sprintf("{ [key: %s]: %s }", rawFieldType(f.GetMapKeyType()), rawFieldType(f.GetMapValueType()))
+		return fmt.Sprintf("{ [key: %s]: %s }", rawFieldType(f.GetMapKeyType(), params), rawFieldType(f.GetMapValueType(), params))
 	}
 	if f.IsRepeated() {
 		return fmt.Sprintf("Array<%s>", t)
@@ -195,32 +196,36 @@ func fieldType(f *desc.FieldDescriptor) string {
 	return t
 }
 
-func rawFieldType(f *desc.FieldDescriptor) string {
+func rawFieldType(f *desc.FieldDescriptor, params *Parameters) string {
 	switch f.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		fallthrough
 	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
 		fallthrough
+	case descriptor.FieldDescriptorProto_TYPE_INT32:
+		fallthrough
+	case descriptor.FieldDescriptorProto_TYPE_UINT32:
+		fallthrough
+	case descriptor.FieldDescriptorProto_TYPE_FIXED32:
+		fallthrough
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
+		fallthrough
+	case descriptor.FieldDescriptorProto_TYPE_SINT32:
+		return "number"
 	case descriptor.FieldDescriptorProto_TYPE_INT64:
 		fallthrough
 	case descriptor.FieldDescriptorProto_TYPE_UINT64:
 		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_INT32:
-		fallthrough
 	case descriptor.FieldDescriptorProto_TYPE_FIXED64:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_FIXED32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_UINT32:
-		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
 		fallthrough
 	case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
 		fallthrough
-	case descriptor.FieldDescriptorProto_TYPE_SINT32:
-		fallthrough
 	case descriptor.FieldDescriptorProto_TYPE_SINT64:
-		return "number"
+		if params.Int64AsString {
+			return "string"
+		} else {
+			return "number"
+		}
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
 		return "boolean"
 	case descriptor.FieldDescriptorProto_TYPE_STRING:

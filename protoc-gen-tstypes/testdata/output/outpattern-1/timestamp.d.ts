@@ -3,7 +3,7 @@
 declare namespace google.protobuf {
 
     export interface Timestamp {
-        seconds?: number;
+        seconds?: string;
         nanos?: number;
     }
 
