@@ -5,6 +5,11 @@ declare namespace google.protobuf {
     export enum NullValue {
         NULL_VALUE = 0,
     }
+    export interface Struct_FieldsEntry {
+        key?: string;
+        value?: Value;
+    }
+
     export interface Struct {
         fields?: { [key: string]: Value };
     }
