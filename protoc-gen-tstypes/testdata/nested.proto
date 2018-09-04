@@ -24,3 +24,12 @@ message Tweet {
   Type tweet_type = 1;
   string content = 2;
 }
+
+message A {
+  message B {
+    string id = 1;
+  }
+
+  string id = 1;
+  B b = 2;
+}
