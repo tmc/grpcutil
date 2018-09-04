@@ -3,7 +3,7 @@
 declare namespace google.protobuf {
 
     export interface Duration {
-        seconds?: string;
+        seconds?: number;
         nanos?: number;
     }
 

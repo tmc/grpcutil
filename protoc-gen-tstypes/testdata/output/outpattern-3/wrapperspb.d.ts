@@ -11,11 +11,11 @@ declare namespace google.protobuf {
     }
 
     export interface Int64Value {
-        value?: string;
+        value?: number;
     }
 
     export interface UInt64Value {
-        value?: string;
+        value?: number;
     }
 
     export interface Int32Value {
