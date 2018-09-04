@@ -29,6 +29,7 @@
 //  int_enums: use ints instead of strings for enums (default false)
 //  outpattern: control the output file paths.
 //  async_iterators: use async iterators for streaming endpoint types (default false)
+//  int64_string: use string representation for 64 bit numbers (default false)
 // An example of running with a custom option set:
 //  protoc -I. --tstypes_out=original_names=true,async_iterators=true:. route_guide.proto
 //
