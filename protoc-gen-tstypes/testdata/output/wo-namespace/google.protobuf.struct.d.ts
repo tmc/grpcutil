@@ -3,6 +3,11 @@
 export enum NullValue {
     NULL_VALUE = "NULL_VALUE",
 }
+export interface Struct_FieldsEntry {
+    key?: string;
+    value?: Value;
+}
+
 export interface Struct {
     fields?: { [key: string]: Value };
 }

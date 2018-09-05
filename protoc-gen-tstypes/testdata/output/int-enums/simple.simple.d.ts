@@ -2,7 +2,7 @@
 
 declare namespace simple {
 
-    export enum Corpus {
+    export enum SearchRequest_Corpus {
         UNIVERSAL = 0,
         WEB = 1,
         IMAGES = 2,
@@ -11,11 +11,16 @@ declare namespace simple {
         PRODUCTS = 5,
         VIDEO = 6,
     }
+    export interface SearchRequest_XyzEntry {
+        key?: string;
+        value?: number;
+    }
+
     export interface SearchRequest {
         query?: string;
         pageNumber?: number;
         resultPerPage?: number;
-        corpus?: Corpus;
+        corpus?: SearchRequest_Corpus;
         sentAt?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
         zytes?: Uint8Array;

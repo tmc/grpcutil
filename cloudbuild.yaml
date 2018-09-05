@@ -1,0 +1,8 @@
+steps:
+- name: 'gcr.io/cloud-builders/go'
+  args: ['get', '-v', 'github.com/tmc/grpcutil/protoc-gen-tstypes']
+  env: ['PROJECT_ROOT=github.com/tmc/grpcutil']
+
+- name: 'gcr.io/cloud-builders/go'
+  args: ['install', 'github.com/tmc/grpcutil/protoc-gen-tstypes']
+  env: ['PROJECT_ROOT=github.com/tmc/grpcutil']

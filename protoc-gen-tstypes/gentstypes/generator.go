@@ -174,7 +174,11 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 	for _, e := range m.GetNestedEnumTypes() {
 		g.generateEnum(e, params)
 	}
-	g.W(fmt.Sprintf("export interface %s {", m.GetName()))
+	for _, m := range m.GetNestedMessageTypes() {
+		g.generateMessage(m, params)
+	}
+	name := packageQualifiedName(m)
+	g.W(fmt.Sprintf("export interface %s {", name))
 	for _, f := range m.GetFields() {
 		name := f.GetName()
 		if !params.OriginalNames {
@@ -233,19 +237,33 @@ func rawFieldType(f *desc.FieldDescriptor, params *Parameters) string {
 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
 		return "Uint8Array"
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		return f.GetEnumType().GetName()
+		t := f.GetEnumType()
+		if t.GetFile().GetPackage() != f.GetFile().GetPackage() {
+			return t.GetFullyQualifiedName()
+		}
+		return packageQualifiedName(t)
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		t := f.GetMessageType()
 		if t.GetFile().GetPackage() != f.GetFile().GetPackage() {
 			return t.GetFullyQualifiedName()
 		}
-		return t.GetName()
+		return packageQualifiedName(t)
 	}
 	return "any /*unknown*/"
 }
 
+func packageQualifiedName(e desc.Descriptor) string {
+	name := e.GetName()
+	var c desc.Descriptor
+	for c = e.GetParent(); c.GetParent() != nil; c = c.GetParent() {
+		name = fmt.Sprintf("%v_%v", c.GetName(), name)
+	}
+	return name
+}
+
 func (g *Generator) generateEnum(e *desc.EnumDescriptor, params *Parameters) {
-	g.W(fmt.Sprintf("export enum %s {", e.GetName()))
+	name := packageQualifiedName(e)
+	g.W(fmt.Sprintf("export enum %s {", name))
 	for _, v := range e.GetValues() {
 		if params.EnumsAsInt {
 			g.W(fmt.Sprintf("    %s = %v,", v.GetName(), v.GetNumber()))

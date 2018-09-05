@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package nested;
+
+message Notification {
+  enum Type {
+    UNSPECIFIED = 0;
+    TEXT = 1;
+    VIDEO = 2;
+    AUDIO = 3;
+  }
+
+  Type message_type = 1;
+  string content = 2;
+}
+
+message Tweet {
+  enum Type {
+    UNSPECIFIED = 0;
+    ORIGINAL = 1;
+    RETWEET = 2;
+  }
+
+  Type tweet_type = 1;
+  string content = 2;
+}
+
+message A {
+  message B {
+    string id = 1;
+  }
+
+  string id = 1;
+  B b = 2;
+}
