@@ -24,12 +24,14 @@ declare namespace simple {
         sent_at?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
         zytes?: Uint8Array;
+        example_required: number;
     }
 
     export interface SearchResponse {
-        results?: Array<string>;
-        num_results?: number;
-        original_request?: SearchRequest;
+        results: Array<string>;
+        num_results: number;
+        original_request: SearchRequest;
+        next_results_uri?: string;
     }
 
 }

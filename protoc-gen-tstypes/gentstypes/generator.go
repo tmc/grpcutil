@@ -19,6 +19,7 @@ import (
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/jhump/protoreflect/desc"
+	"github.com/tmc/grpcutil/protoc-gen-tstypes/opts"
 )
 
 const indent = "    "
@@ -178,13 +179,32 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 		g.generateMessage(m, params)
 	}
 	name := packageQualifiedName(m)
+
+	fieldRequiredDefault := false
+
+	if o, err := proto.GetExtension(m.AsDescriptorProto().Options, opts.E_FieldDefaults); err == nil {
+		if o, ok := o.(*opts.Options); ok {
+			fieldRequiredDefault = o.GetRequired()
+		}
+	}
 	g.W(fmt.Sprintf("export interface %s {", name))
 	for _, f := range m.GetFields() {
 		name := f.GetName()
 		if !params.OriginalNames {
 			name = f.GetJSONName()
 		}
-		g.W(fmt.Sprintf(indent+"%s?: %s;", name, fieldType(f, params)))
+		required := fieldRequiredDefault
+		e, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, opts.E_Field)
+		if err == nil {
+			if e, ok := e.(*opts.Options); ok {
+				required = e.GetRequired()
+			}
+		}
+		suffix := ""
+		if !required {
+			suffix = "?"
+		}
+		g.W(fmt.Sprintf(indent+"%s%s: %s;", name, suffix, fieldType(f, params)))
 	}
 	g.W("}\n")
 }
