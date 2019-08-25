@@ -1,0 +1,29 @@
+builds:
+- id: protoc-gen-tstypes
+  binary: protoc-gen-tstypes
+  main: ./protoc-gen-tstypes/main.go
+  goarch:
+    - amd64
+    - 386
+- id: protoc-gen-flowtypes
+  binary: protoc-gen-flowtypes
+  main: ./protoc-gen-flowtypes/main.go
+  goarch:
+    - amd64
+    - 386
+- id: protoc-gen-elmtypes
+  binary: protoc-gen-elmtypes
+  main: ./protoc-gen-elmtypes/main.go
+  goarch:
+    - amd64
+    - 386
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
