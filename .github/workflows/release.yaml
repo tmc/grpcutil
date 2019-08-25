@@ -1,12 +1,14 @@
-on:
-  push: 
-    branches: 
-      - refs/tags/*
+ on:
+   push: 
+     branches: 
+       - refs/*
 name: Release
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+    - run: pwd
+    - run: ls -alh
     - name: goreleaser
       uses: docker://goreleaser/goreleaser
       env:
@@ -15,4 +17,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GORELEASER_GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
       with:
-        args: release --config=.github/.goreleaser.yml
+        args: release --skip-publish
