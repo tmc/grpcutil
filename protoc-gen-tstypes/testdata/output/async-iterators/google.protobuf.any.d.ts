@@ -3,7 +3,7 @@
 declare namespace google.protobuf {
 
     export interface Any {
-        typeUrl?: string;
+        type_url?: string;
         value?: Uint8Array;
     }
 

@@ -9,7 +9,7 @@ declare namespace nested {
         AUDIO = "AUDIO",
     }
     export interface Notification {
-        messageType?: Notification_Type;
+        message_type?: Notification_Type;
         content?: string;
     }
 
@@ -19,7 +19,7 @@ declare namespace nested {
         RETWEET = "RETWEET",
     }
     export interface Tweet {
-        tweetType?: Tweet_Type;
+        tweet_type?: Tweet_Type;
         content?: string;
     }
 

@@ -16,19 +16,19 @@ export interface SearchRequest_XyzEntry {
 
 export interface SearchRequest {
     query?: string;
-    pageNumber?: number;
-    resultPerPage?: number;
+    page_number?: number;
+    result_per_page?: number;
     corpus?: SearchRequest_Corpus;
-    sentAt?: google.protobuf.Timestamp;
+    sent_at?: google.protobuf.Timestamp;
     xyz?: { [key: string]: number };
     zytes?: Uint8Array;
-    exampleRequired: number;
+    example_required: number;
 }
 
 export interface SearchResponse {
     results: Array<string>;
-    numResults: number;
-    originalRequest: SearchRequest;
-    nextResultsUri?: string;
+    num_results: number;
+    original_request: SearchRequest;
+    next_results_uri?: string;
 }
 

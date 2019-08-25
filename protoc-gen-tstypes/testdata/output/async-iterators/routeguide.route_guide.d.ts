@@ -23,10 +23,10 @@ declare namespace routeguide {
     }
 
     export interface RouteSummary {
-        pointCount?: number;
-        featureCount?: number;
+        point_count?: number;
+        feature_count?: number;
         distance?: number;
-        elapsedTime?: number;
+        elapsed_time?: number;
     }
 
     export interface RouteGuideService {
