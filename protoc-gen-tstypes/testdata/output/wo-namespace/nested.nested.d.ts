@@ -7,7 +7,7 @@ export enum Notification_Type {
     AUDIO = "AUDIO",
 }
 export interface Notification {
-    messageType?: Notification_Type;
+    message_type?: Notification_Type;
     content?: string;
 }
 
@@ -17,7 +17,7 @@ export enum Tweet_Type {
     RETWEET = "RETWEET",
 }
 export interface Tweet {
-    tweetType?: Tweet_Type;
+    tweet_type?: Tweet_Type;
     content?: string;
 }
 
