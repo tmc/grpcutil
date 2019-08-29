@@ -16,10 +16,12 @@ declare namespace simple {
         value?: number;
     }
 
+    // SearchRequest is an example type representing a search query.
     export interface SearchRequest {
         query?: string;
         page_number?: number;
-        result_per_page?: number;
+        // Number of results per page.
+        result_per_page?: number; // Should never be zero.
         corpus?: SearchRequest_Corpus;
         sent_at?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
