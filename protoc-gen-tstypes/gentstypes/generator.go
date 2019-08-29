@@ -187,6 +187,10 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 			fieldRequiredDefault = o.GetRequired()
 		}
 	}
+
+	if comment := m.GetSourceInfo().GetLeadingComments(); comment != "" {
+		g.w(fmt.Sprintf("//%s", comment))
+	}
 	g.W(fmt.Sprintf("export interface %s {", name))
 	for _, f := range m.GetFields() {
 		name := f.GetName()
@@ -204,7 +208,15 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 		if !required {
 			suffix = "?"
 		}
-		g.W(fmt.Sprintf(indent+"%s%s: %s;", name, suffix, fieldType(f, params)))
+
+		if comment := f.GetSourceInfo().GetLeadingComments(); comment != "" {
+			g.w(fmt.Sprintf(indent+"//%s", comment))
+		}
+		trailingComment := ""
+		if comment := f.GetSourceInfo().GetTrailingComments(); comment != "" {
+			trailingComment = " // " + strings.TrimSpace(comment)
+		}
+		g.W(fmt.Sprintf(indent+"%s%s: %s;%s", name, suffix, fieldType(f, params), trailingComment))
 	}
 	g.W("}\n")
 }
