@@ -21,7 +21,7 @@ for e in $(ls ./*proto); do
     protoc -I. -I${gopath_root} --tstypes_out=v=1,async_iterators=true:output/async-iterators/ "${e}"
 done
 
-if [ "${CHECK:-}" != "" ]; then
+if [ "${CHECK:-}" != "0" ]; then
     for d in ${ds[*]}; do
         set +e
         tsc --lib es2015,esnext.asynciterable --strict --pretty ${d}/*ts

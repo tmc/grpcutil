@@ -11,7 +11,7 @@ export interface Request {
 // Unary response, as configured by the request.
 export interface Response {
     // The user the request came from, for verifying authentication was
- successful.
+    // successful.
     username?: string;
     // OAuth scope.
     oauth_scope?: string;

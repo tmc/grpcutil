@@ -76,6 +76,14 @@ func (g *Generator) w(s string) {
 	g.Buffer.WriteString(s)
 }
 
+func (g *Generator) wcomment(s string) {
+	if s != "" {
+		for _, line := range strings.Split(strings.TrimSuffix(s, "\n"), "\n") {
+			g.W(fmt.Sprintf("//%s", line))
+		}
+	}
+}
+
 var s = &spew.ConfigState{
 	Indent:                  " ",
 	DisableMethods:          true,
@@ -188,9 +196,7 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 		}
 	}
 
-	if comment := m.GetSourceInfo().GetLeadingComments(); comment != "" {
-		g.w(fmt.Sprintf("//%s", comment))
-	}
+	g.wcomment(m.GetSourceInfo().GetLeadingComments())
 	g.W(fmt.Sprintf("export interface %s {", name))
 	for _, f := range m.GetFields() {
 		name := f.GetName()
@@ -209,9 +215,9 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 			suffix = "?"
 		}
 
-		if comment := f.GetSourceInfo().GetLeadingComments(); comment != "" {
-			g.w(fmt.Sprintf(indent+"//%s", comment))
-		}
+		g.incIndent()
+		g.wcomment(f.GetSourceInfo().GetLeadingComments())
+		g.decIndent()
 		trailingComment := ""
 		if comment := f.GetSourceInfo().GetTrailingComments(); comment != "" {
 			trailingComment = " // " + strings.TrimSpace(comment)
