@@ -9,7 +9,7 @@ ds=(output/defaults output/int-enums output/camel-case-names output/outpattern-{
 # GOPATH src root relative to the testdata directory
 gopath_root="../../../../../"
 
-mkdir ${ds[*]}
+mkdir -p ${ds[*]}
 for e in $(ls ./*proto); do
     protoc -I. -I${gopath_root} --tstypes_out=v=1:output/defaults/ "${e}"
     protoc -I. -I${gopath_root} --tstypes_out=v=1,int_enums=true:output/int-enums/ "${e}"

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package simple;
+package example_with_field_options;
 
 import "google/protobuf/timestamp.proto";
 
