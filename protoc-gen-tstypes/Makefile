@@ -8,10 +8,13 @@ test:
 	go test ./...
 
 check:
-	tsc --strict --pretty testdata/output/defaults/*
+	npx typescript --pretty testdata/output/defaults/*
+
+checkall:
+	npx typescript --pretty testdata/output/defaults/*
 
 checkwatch:
-	tsc -w --strict --pretty testdata/output/defaults/*
+	npx typescript -w --pretty testdata/output/defaults/*
 
 examples:
 	bash examples.sh
