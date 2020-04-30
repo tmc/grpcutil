@@ -1,8 +1,9 @@
 syntax = "proto3";
 
-package simple;
+package example_with_field_options;
 
 import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 
 // optional to specify optional fields and nullable values.
 import "github.com/tmc/grpcutil/protoc-gen-tstypes/opts/opts.proto";
@@ -26,11 +27,17 @@ message SearchRequest {
   google.protobuf.Timestamp sent_at = 5;
   map<string, int32> xyz = 8;
   bytes zytes = 9;
-  int64 example_required = 6 [(opts.field) = {required : true}];
+  int64 example_required = 6 [
+    // (opts.field) = {required : true}, // old pattern
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message SearchResponse {
-  option (opts.field_defaults) = {required: true};
+  option (opts.field_defaults) = {
+    // required: true, // old pattern
+    field_behavior: REQUIRED,
+  };
   repeated string results = 1;
   int32 num_results = 2;
   SearchRequest original_request = 3;

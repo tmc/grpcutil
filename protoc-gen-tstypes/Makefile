@@ -1,17 +1,23 @@
 .PHONY: all build test examples
 all: build test
 
-build:
+build: gen
 	go install
+
+gen:
+	go generate ./...
 
 test:
 	go test ./...
 
 check:
-	tsc --strict --pretty testdata/output/defaults/*
+	npx typescript --pretty testdata/output/defaults/*
+
+checkall:
+	npx typescript --pretty testdata/output/defaults/*
 
 checkwatch:
-	tsc -w --strict --pretty testdata/output/defaults/*
+	npx typescript -w --pretty testdata/output/defaults/*
 
 examples:
 	bash examples.sh
