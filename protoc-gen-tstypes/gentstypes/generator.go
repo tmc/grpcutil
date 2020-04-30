@@ -26,6 +26,9 @@ import (
 
 const indent = "    "
 
+type MessageOptionsFunc = func(*desc.MessageDescriptor) MessageOptions
+type FieldOptionsFunc = func(MessageOptions, *desc.FieldDescriptor) FieldOptions
+
 type Parameters struct {
 	AsyncIterators        bool
 	DeclareNamespace      bool
@@ -36,6 +39,9 @@ type Parameters struct {
 	Verbose               int
 	Int64AsString         bool
 	// TODO: allow template specification?
+
+	MessageOptionsFunc MessageOptionsFunc
+	FieldOptionsFunc   FieldOptionsFunc
 }
 
 type Generator struct {
@@ -50,6 +56,14 @@ type OutputNameContext struct {
 	BaseName   string
 	Descriptor *desc.FileDescriptor
 	Request    *plugin.CodeGeneratorRequest
+}
+
+type MessageOptions struct {
+	DefaultFieldOptions *FieldOptions
+}
+
+type FieldOptions struct {
+	IsRequired bool
 }
 
 func New() *Generator {
@@ -180,6 +194,40 @@ func (g *Generator) generateServices(services []*desc.ServiceDescriptor, params 
 	}
 }
 
+func DefaultMessageOptionsFunc(m *desc.MessageDescriptor) MessageOptions {
+	result := MessageOptions{}
+	if o, err := proto.GetExtension(m.AsDescriptorProto().Options, opts.E_FieldDefaults); err == nil {
+		if o, ok := o.(*opts.Options); ok {
+			fieldRequiredDefault := o.GetRequired() || o.GetFieldBehavior() == annotations.FieldBehavior_REQUIRED
+			result.DefaultFieldOptions = &FieldOptions{IsRequired: fieldRequiredDefault}
+		}
+	}
+	return result
+}
+
+func DefaultFieldOptionsFunc(mOpts MessageOptions, f *desc.FieldDescriptor) FieldOptions {
+	required := false
+	if mOpts.DefaultFieldOptions != nil {
+		required = mOpts.DefaultFieldOptions.IsRequired
+	}
+	e, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, opts.E_Field)
+	if err == nil {
+		if e, ok := e.(*opts.Options); ok {
+			required = e.GetRequired()
+		}
+	}
+	if o, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, annotations.E_FieldBehavior); err == nil {
+		if opts, ok := o.([]annotations.FieldBehavior); ok {
+			for _, opt := range opts {
+				if opt == annotations.FieldBehavior_REQUIRED {
+					required = true
+				}
+			}
+		}
+	}
+	return FieldOptions{IsRequired: required}
+}
+
 func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameters) {
 	// TODO: namespace messages?
 	for _, e := range m.GetNestedEnumTypes() {
@@ -190,12 +238,9 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 	}
 	name := packageQualifiedName(m)
 
-	fieldRequiredDefault := false
-
-	if o, err := proto.GetExtension(m.AsDescriptorProto().Options, opts.E_FieldDefaults); err == nil {
-		if o, ok := o.(*opts.Options); ok {
-			fieldRequiredDefault = o.GetRequired() || o.GetFieldBehavior() == annotations.FieldBehavior_REQUIRED
-		}
+	mOpts := DefaultMessageOptionsFunc(m)
+	if params.MessageOptionsFunc != nil {
+		mOpts = params.MessageOptionsFunc(m)
 	}
 
 	g.wcomment(m.GetSourceInfo().GetLeadingComments())
@@ -205,22 +250,12 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 		if !params.OriginalNames {
 			name = f.GetJSONName()
 		}
-		required := fieldRequiredDefault
-		e, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, opts.E_Field)
-		if err == nil {
-			if e, ok := e.(*opts.Options); ok {
-				required = e.GetRequired()
-			}
+		fOptsFn := DefaultFieldOptionsFunc
+		if params.FieldOptionsFunc != nil {
+			fOptsFn = params.FieldOptionsFunc
 		}
-		if o, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, annotations.E_FieldBehavior); err == nil {
-			if opts, ok := o.([]annotations.FieldBehavior); ok {
-				for _, opt := range opts {
-					if opt == annotations.FieldBehavior_REQUIRED {
-						required = true
-					}
-				}
-			}
-		}
+		fOpts := fOptsFn(mOpts, f)
+		required := fOpts.IsRequired
 
 		suffix := ""
 		if !required {
