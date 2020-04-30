@@ -1,8 +1,11 @@
 .PHONY: all build test examples
 all: build test
 
-build:
+build: gen
 	go install
+
+gen:
+	go generate ./...
 
 test:
 	go test ./...

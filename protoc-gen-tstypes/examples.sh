@@ -25,7 +25,7 @@ done
 if [ "${CHECK:-}" != "0" ]; then
     for d in ${ds[*]}; do
         set +e
-        tsc --lib es2015,esnext.asynciterable --strict --pretty ${d}/*ts
+        npx typescript --lib es2015,esnext.asynciterable --strict --pretty ${d}/*ts
         set -e
     done
 fi

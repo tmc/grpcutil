@@ -20,6 +20,8 @@ import (
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/tmc/grpcutil/protoc-gen-tstypes/opts"
+
+	"google.golang.org/genproto/googleapis/api/annotations"
 )
 
 const indent = "    "
@@ -192,7 +194,7 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 
 	if o, err := proto.GetExtension(m.AsDescriptorProto().Options, opts.E_FieldDefaults); err == nil {
 		if o, ok := o.(*opts.Options); ok {
-			fieldRequiredDefault = o.GetRequired()
+			fieldRequiredDefault = o.GetRequired() || o.GetFieldBehavior() == annotations.FieldBehavior_REQUIRED
 		}
 	}
 
@@ -210,6 +212,16 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 				required = e.GetRequired()
 			}
 		}
+		if o, err := proto.GetExtension(f.AsFieldDescriptorProto().Options, annotations.E_FieldBehavior); err == nil {
+			if opts, ok := o.([]annotations.FieldBehavior); ok {
+				for _, opt := range opts {
+					if opt == annotations.FieldBehavior_REQUIRED {
+						required = true
+					}
+				}
+			}
+		}
+
 		suffix := ""
 		if !required {
 			suffix = "?"

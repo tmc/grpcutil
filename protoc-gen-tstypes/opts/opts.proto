@@ -1,7 +1,9 @@
 syntax = "proto2";
 
-import "google/protobuf/descriptor.proto";
 package opts;
+
+import "google/protobuf/descriptor.proto";
+import "google/api/field_behavior.proto";
 
 extend google.protobuf.MessageOptions {
   optional Options field_defaults = 1035;
@@ -14,4 +16,5 @@ extend google.protobuf.FieldOptions {
 message Options {
   // Denotes that a field should not be considered optional.
   optional bool required = 1;
+  optional google.api.FieldBehavior field_behavior = 2;
 }
