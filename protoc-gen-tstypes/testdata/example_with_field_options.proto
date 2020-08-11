@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/api/field_behavior.proto";
 
 // optional to specify optional fields and nullable values.
-import "github.com/tmc/grpcutil/protoc-gen-tstypes/opts/opts.proto";
+import "opts/opts.proto";
 
 // SearchRequest is an example type representing a search query.
 message SearchRequest {

@@ -1,0 +1,40 @@
+on: push
+
+jobs:
+  protoc-gen-tstypes:
+    runs-on: ubuntu-latest
+
+    env:
+      PROTOBUF_ROOT: /tmp/protobuf
+      GOOGLEAPIS_ROOT: /tmp/googleapis
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+
+      - uses: actions/setup-go@v2
+
+      - name: clone dependencies
+        run: |
+          git clone --depth 1 --branch v3.12.4 https://github.com/protocolbuffers/protobuf.git $PROTOBUF_ROOT
+          git clone --depth 1 https://github.com/googleapis/googleapis.git $GOOGLEAPIS_ROOT
+
+      - name: install protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
+      - name: install protoc-gen-go
+        run: |
+          go install github.com/golang/protobuf/protoc-gen-go
+
+      - name: install protoc-gen-tstypes
+        run: |
+          cd protoc-gen-tstypes
+          make build
+
+      - name: build examples
+        run: |
+          cd protoc-gen-tstypes
+          make examples

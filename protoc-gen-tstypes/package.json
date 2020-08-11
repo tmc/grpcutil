@@ -1,0 +1,10 @@
+{
+  "name": "protoc-gen-tstypes",
+  "private": true,
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  },
+  "scripts": {
+    "test": ""
+  }
+}
