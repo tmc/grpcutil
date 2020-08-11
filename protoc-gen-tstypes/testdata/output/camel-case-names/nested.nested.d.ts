@@ -2,34 +2,43 @@
 
 declare namespace nested {
 
-    export enum Notification_Type {
-        UNSPECIFIED = "UNSPECIFIED",
-        TEXT = "TEXT",
-        VIDEO = "VIDEO",
-        AUDIO = "AUDIO",
-    }
     export interface Notification {
-        messageType?: Notification_Type;
+        messageType?: Notification.Type;
         content?: string;
     }
 
-    export enum Tweet_Type {
-        UNSPECIFIED = "UNSPECIFIED",
-        ORIGINAL = "ORIGINAL",
-        RETWEET = "RETWEET",
+    export namespace Notification {
+        export enum Type {
+            UNSPECIFIED = "UNSPECIFIED",
+            TEXT = "TEXT",
+            VIDEO = "VIDEO",
+            AUDIO = "AUDIO",
+        }
     }
+
     export interface Tweet {
-        tweetType?: Tweet_Type;
+        tweetType?: Tweet.Type;
         content?: string;
     }
 
-    export interface A_B {
-        id?: string;
+    export namespace Tweet {
+        export enum Type {
+            UNSPECIFIED = "UNSPECIFIED",
+            ORIGINAL = "ORIGINAL",
+            RETWEET = "RETWEET",
+        }
     }
 
     export interface A {
         id?: string;
-        b?: A_B;
+        b?: A.B;
+    }
+
+    export namespace A {
+        export interface B {
+            id?: string;
+        }
+
     }
 
 }

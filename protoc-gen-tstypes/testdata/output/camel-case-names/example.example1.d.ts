@@ -2,28 +2,31 @@
 
 declare namespace example {
 
-    export enum SearchRequest_Corpus {
-        UNIVERSAL = "UNIVERSAL",
-        WEB = "WEB",
-        IMAGES = "IMAGES",
-        LOCAL = "LOCAL",
-        NEWS = "NEWS",
-        PRODUCTS = "PRODUCTS",
-        VIDEO = "VIDEO",
-    }
-    export interface SearchRequest_XyzEntry {
-        key?: string;
-        value?: number;
-    }
-
     export interface SearchRequest {
         query?: string;
         pageNumber?: number;
         resultPerPage?: number;
-        corpus?: SearchRequest_Corpus;
+        corpus?: SearchRequest.Corpus;
         sentAt?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
         zytes?: Uint8Array;
+    }
+
+    export namespace SearchRequest {
+        export enum Corpus {
+            UNIVERSAL = "UNIVERSAL",
+            WEB = "WEB",
+            IMAGES = "IMAGES",
+            LOCAL = "LOCAL",
+            NEWS = "NEWS",
+            PRODUCTS = "PRODUCTS",
+            VIDEO = "VIDEO",
+        }
+        export interface XyzEntry {
+            key?: string;
+            value?: number;
+        }
+
     }
 
     export interface SearchResponse {

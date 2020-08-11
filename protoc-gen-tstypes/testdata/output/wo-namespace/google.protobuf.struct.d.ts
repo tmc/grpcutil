@@ -3,11 +3,6 @@
 export enum NullValue {
     NULL_VALUE = "NULL_VALUE",
 }
-export interface Struct_FieldsEntry {
-    key?: string;
-    value?: Value;
-}
-
 // `Struct` represents a structured data value, consisting of fields
 // which map to dynamically typed values. In some languages, `Struct`
 // might be supported by a native representation. For example, in
@@ -19,6 +14,14 @@ export interface Struct_FieldsEntry {
 export interface Struct {
     // Unordered map of dynamically typed values.
     fields?: { [key: string]: Value };
+}
+
+export namespace Struct {
+    export interface FieldsEntry {
+        key?: string;
+        value?: Value;
+    }
+
 }
 
 // `Value` represents a dynamically typed value which can be either

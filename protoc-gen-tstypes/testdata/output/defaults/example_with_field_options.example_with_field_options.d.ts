@@ -2,31 +2,34 @@
 
 declare namespace example_with_field_options {
 
-    export enum SearchRequest_Corpus {
-        UNIVERSAL = "UNIVERSAL",
-        WEB = "WEB",
-        IMAGES = "IMAGES",
-        LOCAL = "LOCAL",
-        NEWS = "NEWS",
-        PRODUCTS = "PRODUCTS",
-        VIDEO = "VIDEO",
-    }
-    export interface SearchRequest_XyzEntry {
-        key?: string;
-        value?: number;
-    }
-
     // SearchRequest is an example type representing a search query.
     export interface SearchRequest {
         query?: string;
         page_number?: number;
         // Number of results per page.
         result_per_page?: number; // Should never be zero.
-        corpus?: SearchRequest_Corpus;
+        corpus?: SearchRequest.Corpus;
         sent_at?: google.protobuf.Timestamp;
         xyz?: { [key: string]: number };
         zytes?: Uint8Array;
         example_required: number;
+    }
+
+    export namespace SearchRequest {
+        export enum Corpus {
+            UNIVERSAL = "UNIVERSAL",
+            WEB = "WEB",
+            IMAGES = "IMAGES",
+            LOCAL = "LOCAL",
+            NEWS = "NEWS",
+            PRODUCTS = "PRODUCTS",
+            VIDEO = "VIDEO",
+        }
+        export interface XyzEntry {
+            key?: string;
+            value?: number;
+        }
+
     }
 
     export interface SearchResponse {
