@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package nested;
 
+// Comment for Notification
 message Notification {
+  // Comment for Notification.Type
   enum Type {
     UNSPECIFIED = 0;
     TEXT = 1;
@@ -10,11 +12,14 @@ message Notification {
     AUDIO = 3;
   }
 
+  // Comment for Notification.message_type
   Type message_type = 1;
+  // Comment for Notification.content
   string content = 2;
 }
 
 message Tweet {
+  // Comment for Tweet.Type
   enum Type {
     UNSPECIFIED = 0;
     ORIGINAL = 1;

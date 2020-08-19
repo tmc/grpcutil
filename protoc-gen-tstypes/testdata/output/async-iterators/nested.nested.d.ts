@@ -2,12 +2,16 @@
 
 declare namespace nested {
 
+    // Comment for Notification
     export interface Notification {
+        // Comment for Notification.message_type
         message_type?: Notification.Type;
+        // Comment for Notification.content
         content?: string;
     }
 
     export namespace Notification {
+        // Comment for Notification.Type
         export enum Type {
             UNSPECIFIED = "UNSPECIFIED",
             TEXT = "TEXT",
@@ -22,6 +26,7 @@ declare namespace nested {
     }
 
     export namespace Tweet {
+        // Comment for Tweet.Type
         export enum Type {
             UNSPECIFIED = "UNSPECIFIED",
             ORIGINAL = "ORIGINAL",

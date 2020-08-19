@@ -397,6 +397,8 @@ func packageQualifiedName(e desc.Descriptor) string {
 
 func (g *Generator) generateEnum(e *desc.EnumDescriptor, params *Parameters) {
 	name := e.GetName()
+
+	g.writeComment(e.GetSourceInfo().GetLeadingComments())
 	g.W(fmt.Sprintf("export enum %s {", name))
 	for _, v := range e.GetValues() {
 		if params.EnumsAsInt {
