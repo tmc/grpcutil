@@ -46,9 +46,10 @@ type Parameters struct {
 
 type Generator struct {
 	*bytes.Buffer
-	indent   string
-	Request  *plugin.CodeGeneratorRequest
-	Response *plugin.CodeGeneratorResponse
+	indent       string
+	Request      *plugin.CodeGeneratorRequest
+	Response     *plugin.CodeGeneratorResponse
+	usedPackages map[string]bool // Use this map to track which packages has been used in one TS file.
 }
 
 type OutputNameContext struct {
@@ -154,6 +155,8 @@ func (g *Generator) GenerateAllFiles(params *Parameters) {
 }
 
 func (g *Generator) generate(f *desc.FileDescriptor, params *Parameters) {
+	g.usedPackages = make(map[string]bool)
+
 	// TODO: consider best order
 	ns := params.DeclareNamespace && f.GetPackage() != ""
 	if ns {
@@ -169,6 +172,13 @@ func (g *Generator) generate(f *desc.FileDescriptor, params *Parameters) {
 		g.decIndent()
 		g.W("}\n")
 	}
+
+	str := g.Buffer.String()
+	g.Buffer.Reset()
+
+	g.generateDependencies(f, f.GetDependencies(), params)
+	g.Buffer.WriteString(str)
+
 	n := genName(g.Request, f, params.OutputNamePattern)
 	if params.Verbose > 0 {
 		fmt.Fprintln(os.Stderr, "generating", n)
@@ -178,6 +188,24 @@ func (g *Generator) generate(f *desc.FileDescriptor, params *Parameters) {
 		Content: proto.String(g.String()),
 	})
 	g.Buffer.Reset()
+	g.usedPackages = make(map[string]bool)
+}
+
+func (g *Generator) generateDependencies(baseFile *desc.FileDescriptor, dependencies []*desc.FileDescriptor, params *Parameters) {
+	for _, d := range dependencies {
+
+		importLine := fmt.Sprintf(`import * as %s from "%s"`, formatImportModule(d), formatImportFile(baseFile, d))
+		if used, ok := g.usedPackages[d.GetPackage()]; ok && used {
+			g.W(importLine)
+		} else {
+			g.W(fmt.Sprintf(`// %s // imported but not used `, importLine))
+		}
+	}
+
+	if len(dependencies) > 0 {
+		g.W("") // add a new line after imports
+	}
+
 }
 
 func (g *Generator) generateMessages(messages []*desc.MessageDescriptor, params *Parameters) {
@@ -271,7 +299,7 @@ func (g *Generator) generateMessageInterface(m *desc.MessageDescriptor, params *
 		if comment := f.GetSourceInfo().GetTrailingComments(); comment != "" {
 			trailingComment = " // " + strings.TrimSpace(comment)
 		}
-		g.W(fmt.Sprintf(indent+"%s%s: %s;%s", name, suffix, fieldType(f, params), trailingComment))
+		g.W(fmt.Sprintf(indent+"%s%s: %s;%s", name, suffix, fieldType(f, params, g.usedPackages), trailingComment))
 	}
 	g.W("}\n")
 }
@@ -323,10 +351,10 @@ func (g *Generator) generateMessage(m *desc.MessageDescriptor, params *Parameter
 	g.generateMessageNamespace(m, params)
 }
 
-func fieldType(f *desc.FieldDescriptor, params *Parameters) string {
-	t := rawFieldType(f, params)
+func fieldType(f *desc.FieldDescriptor, params *Parameters, usedPackages map[string]bool) string {
+	t := rawFieldType(f, params, usedPackages)
 	if f.IsMap() {
-		return fmt.Sprintf("{ [key: %s]: %s }", rawFieldType(f.GetMapKeyType(), params), rawFieldType(f.GetMapValueType(), params))
+		return fmt.Sprintf("{ [key: %s]: %s }", rawFieldType(f.GetMapKeyType(), params, usedPackages), rawFieldType(f.GetMapValueType(), params, usedPackages))
 	}
 	if f.IsRepeated() {
 		return fmt.Sprintf("Array<%s>", t)
@@ -334,7 +362,7 @@ func fieldType(f *desc.FieldDescriptor, params *Parameters) string {
 	return t
 }
 
-func rawFieldType(f *desc.FieldDescriptor, params *Parameters) string {
+func rawFieldType(f *desc.FieldDescriptor, params *Parameters, usedPackages map[string]bool) string {
 	switch f.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		fallthrough
@@ -373,13 +401,17 @@ func rawFieldType(f *desc.FieldDescriptor, params *Parameters) string {
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		t := f.GetEnumType()
 		if t.GetFile().GetPackage() != f.GetFile().GetPackage() {
-			return t.GetFullyQualifiedName()
+			// this field is imported from the outside
+			usedPackages[t.GetFile().GetPackage()] = true
+			return formatImportModule(t.GetFile()) + "." + t.GetName()
 		}
 		return packageQualifiedName(t)
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		t := f.GetMessageType()
 		if t.GetFile().GetPackage() != f.GetFile().GetPackage() {
-			return t.GetFullyQualifiedName()
+			// this field is imported from the outside
+			usedPackages[t.GetFile().GetPackage()] = true
+			return formatImportModule(t.GetFile()) + "." + t.GetName()
 		}
 		return packageQualifiedName(t)
 	}
