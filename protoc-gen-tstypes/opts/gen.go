@@ -1,3 +1,3 @@
-//go:generate protoc -I. -I../../../../googleapis/googleapis --go_out=. opts.proto
+//go:generate protoc -I. -I$GOOGLEAPIS_ROOT --go_out=. opts.proto
 
 package opts
